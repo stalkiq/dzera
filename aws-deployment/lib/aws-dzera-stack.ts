@@ -46,7 +46,7 @@ export class AwsDzeraStack extends cdk.Stack {
     // CloudFront Distribution
     const distribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
-        origin: new origins.S3Origin(frontendBucket, {
+        origin: origins.S3BucketOrigin.withOriginAccessIdentity(frontendBucket, {
           originAccessIdentity,
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
