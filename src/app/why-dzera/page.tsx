@@ -104,7 +104,7 @@ export default function WhyDzeraPage() {
           <DLogo size="lg" variant="orange" />
           <div>
             <h1 className="text-3xl font-serif text-black">AWS Cost Analysis With Dzera</h1>
-            <p className="text-gray-600 italic">Methodology, Architecture, and Implementation</p>
+            <p className="text-gray-700 italic">Methodology, Architecture, and Implementation</p>
           </div>
         </div>
         <p className="text-sm text-gray-500">From AWS Dzera Documentation</p>
@@ -331,52 +331,52 @@ export default function WhyDzeraPage() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-gray-400 text-sm">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-400 px-3 py-2 text-left font-semibold">Service</th>
-                <th className="border border-gray-400 px-3 py-2 text-left font-semibold">Cost Driver</th>
-                <th className="border border-gray-400 px-3 py-2 text-left font-semibold">Common Issues</th>
+              <tr className="bg-gray-800 text-white">
+                <th className="border border-gray-600 px-3 py-2 text-left font-bold">Service</th>
+                <th className="border border-gray-600 px-3 py-2 text-left font-bold">Cost Driver</th>
+                <th className="border border-gray-600 px-3 py-2 text-left font-bold">Common Issues</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td className="border border-gray-400 px-3 py-2 font-medium">EC2</td>
-                <td className="border border-gray-400 px-3 py-2">Hourly compute</td>
-                <td className="border border-gray-400 px-3 py-2">Oversized instances, 24/7 dev environments</td>
+            <tbody className="text-gray-900">
+              <tr className="bg-white">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">EC2</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Hourly compute</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Oversized instances, 24/7 dev environments</td>
               </tr>
-              <tr className="bg-gray-50">
-                <td className="border border-gray-400 px-3 py-2 font-medium">RDS</td>
-                <td className="border border-gray-400 px-3 py-2">Instance hours + storage</td>
-                <td className="border border-gray-400 px-3 py-2">Multi-AZ without need, oversized instances</td>
+              <tr className="bg-gray-100">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">RDS</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Instance hours + storage</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Multi-AZ without need, oversized instances</td>
               </tr>
-              <tr>
-                <td className="border border-gray-400 px-3 py-2 font-medium">NAT Gateway</td>
-                <td className="border border-gray-400 px-3 py-2">Hourly + data processing</td>
-                <td className="border border-gray-400 px-3 py-2">Forgotten gateways, excessive data transfer</td>
+              <tr className="bg-white">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">NAT Gateway</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Hourly + data processing</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Forgotten gateways, excessive data transfer</td>
               </tr>
-              <tr className="bg-gray-50">
-                <td className="border border-gray-400 px-3 py-2 font-medium">Elastic IP</td>
-                <td className="border border-gray-400 px-3 py-2">Hourly when unassociated</td>
-                <td className="border border-gray-400 px-3 py-2">Unattached IPs from terminated instances</td>
+              <tr className="bg-gray-100">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">Elastic IP</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Hourly when unassociated</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Unattached IPs from terminated instances</td>
               </tr>
-              <tr>
-                <td className="border border-gray-400 px-3 py-2 font-medium">DynamoDB</td>
-                <td className="border border-gray-400 px-3 py-2">Capacity + storage</td>
-                <td className="border border-gray-400 px-3 py-2">Global table replicas, over-provisioned capacity</td>
+              <tr className="bg-white">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">DynamoDB</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Capacity + storage</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Global table replicas, over-provisioned capacity</td>
               </tr>
-              <tr className="bg-gray-50">
-                <td className="border border-gray-400 px-3 py-2 font-medium">CloudFront</td>
-                <td className="border border-gray-400 px-3 py-2">Requests + data transfer</td>
-                <td className="border border-gray-400 px-3 py-2">Unused distributions, expensive price classes</td>
+              <tr className="bg-gray-100">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">CloudFront</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Requests + data transfer</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Unused distributions, expensive price classes</td>
               </tr>
-              <tr>
-                <td className="border border-gray-400 px-3 py-2 font-medium">S3</td>
-                <td className="border border-gray-400 px-3 py-2">Storage + requests</td>
-                <td className="border border-gray-400 px-3 py-2">Versioning without lifecycle, wrong storage class</td>
+              <tr className="bg-white">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">S3</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Storage + requests</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Versioning without lifecycle, wrong storage class</td>
               </tr>
-              <tr className="bg-gray-50">
-                <td className="border border-gray-400 px-3 py-2 font-medium">EBS</td>
-                <td className="border border-gray-400 px-3 py-2">Provisioned storage</td>
-                <td className="border border-gray-400 px-3 py-2">Unattached volumes from deleted instances</td>
+              <tr className="bg-gray-100">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">EBS</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Provisioned storage</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Unattached volumes from deleted instances</td>
               </tr>
             </tbody>
           </table>
@@ -405,7 +405,7 @@ export default function WhyDzeraPage() {
           <DLogo size="lg" variant="orange" />
           <h1 className="text-3xl font-serif text-black">What is AWS Dzera?</h1>
         </div>
-        <p className="text-gray-600 italic">Your intelligent AWS cost optimization platform</p>
+        <p className="text-gray-700 italic">Your intelligent AWS cost optimization platform</p>
       </div>
 
       {/* Overview */}
@@ -454,7 +454,7 @@ export default function WhyDzeraPage() {
             <p className="text-gray-700 text-sm mb-2">
               Comprehensive analysis across all major AWS cost centers:
             </p>
-            <ul className="text-gray-600 text-xs space-y-1 ml-4 list-disc">
+            <ul className="text-gray-800 text-xs space-y-1 ml-4 list-disc">
               <li>EC2, RDS, Aurora database instances</li>
               <li>S3, EBS, EFS storage resources</li>
               <li>NAT Gateways, Elastic IPs, VPC endpoints</li>
@@ -471,7 +471,7 @@ export default function WhyDzeraPage() {
             <p className="text-gray-700 text-sm mb-2">
               Accurate cost calculations using current AWS pricing:
             </p>
-            <ul className="text-gray-600 text-xs space-y-1 ml-4 list-disc">
+            <ul className="text-gray-800 text-xs space-y-1 ml-4 list-disc">
               <li>Instance type and region-specific rates</li>
               <li>Storage class and volume type pricing</li>
               <li>Data transfer and request charges</li>
@@ -487,7 +487,7 @@ export default function WhyDzeraPage() {
             <p className="text-gray-700 text-sm mb-2">
               Findings organized by severity and impact:
             </p>
-            <ul className="text-gray-600 text-xs space-y-1 ml-4 list-disc">
+            <ul className="text-gray-800 text-xs space-y-1 ml-4 list-disc">
               <li><span className="text-red-600 font-medium">Critical:</span> High-cost running resources</li>
               <li><span className="text-yellow-600 font-medium">Warning:</span> Unused or misconfigured items</li>
               <li><span className="text-blue-600 font-medium">Info:</span> Optimization opportunities</li>
@@ -502,7 +502,7 @@ export default function WhyDzeraPage() {
             <p className="text-gray-700 text-sm mb-2">
               Specific guidance for each finding:
             </p>
-            <ul className="text-gray-600 text-xs space-y-1 ml-4 list-disc">
+            <ul className="text-gray-800 text-xs space-y-1 ml-4 list-disc">
               <li>Direct AWS Console links</li>
               <li>Rightsizing recommendations</li>
               <li>Reserved Instance opportunities</li>
@@ -631,7 +631,7 @@ export default function WhyDzeraPage() {
           <DLogo size="lg" variant="orange" />
           <h1 className="text-3xl font-serif text-black">Frequently Asked Questions</h1>
         </div>
-        <p className="text-gray-600 italic">Everything you need to know about AWS Dzera</p>
+        <p className="text-gray-700 italic">Everything you need to know about AWS Dzera</p>
       </div>
 
       <div className="space-y-3">
@@ -672,7 +672,7 @@ export default function WhyDzeraPage() {
           <DLogo size="lg" variant="orange" />
           <h1 className="text-3xl font-serif text-black">CLI Script Reference</h1>
         </div>
-        <p className="text-gray-600 italic">Execute cost discovery directly from your terminal</p>
+        <p className="text-gray-700 italic">Execute cost discovery directly from your terminal</p>
       </div>
 
       <section>
@@ -705,7 +705,7 @@ export default function WhyDzeraPage() {
               <DLogo size="xs" variant="dark" />
               cost-inventory.sh
             </span>
-            <span className="text-xs text-gray-600">Copy + Paste into Terminal</span>
+            <span className="text-xs text-gray-700 font-medium">Copy + Paste into Terminal</span>
           </div>
           <pre className="p-4 text-xs leading-relaxed bg-gray-900 text-green-400 overflow-x-auto font-mono">
 {script}
@@ -774,7 +774,7 @@ export default function WhyDzeraPage() {
       <div className="bg-gray-50 border border-gray-300 rounded p-6 text-center">
         <DLogo size="lg" variant="orange" />
         <h3 className="text-lg font-bold text-gray-900 mt-3 mb-2">Prefer a Visual Interface?</h3>
-        <p className="text-gray-600 text-sm mb-4">
+        <p className="text-gray-800 text-sm mb-4">
           Get the same insights with automated analysis and a professional dashboard.
         </p>
         <a
