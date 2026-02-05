@@ -350,6 +350,9 @@ export default function Home() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   
+  // Mobile navigation state
+  const [mobileView, setMobileView] = useState<"scan" | "services" | "chat" | "terminal">("scan");
+  
   // Command Palette Search State
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [commandSearch, setCommandSearch] = useState("");
@@ -661,23 +664,219 @@ export default function Home() {
 
   if (step === "setup") {
     return (
-      <div className="min-h-screen bg-[#0b0f14] text-[#e5e7eb] px-4 py-6">
-        <div className="max-w-[1600px] mx-auto space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-3">
-              <DLogo size="lg" active />
+      <div className="min-h-screen bg-[#0b0f14] text-[#e5e7eb] px-2 sm:px-4 py-3 sm:py-6 pb-20 sm:pb-6">
+        <div className="max-w-[1600px] mx-auto space-y-3 sm:space-y-4">
+          {/* Header - Simplified for mobile */}
+          <div className="flex items-center justify-between px-1 sm:px-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <DLogo size="md" active />
               <div>
-                <h1 className="text-lg font-bold text-white leading-none tracking-tight">AWS Dzera</h1>
-                <p className="text-[#FF9900] text-[8px] font-bold uppercase tracking-widest">Workspace</p>
+                <h1 className="text-base sm:text-lg font-bold text-white leading-none tracking-tight">AWS Dzera</h1>
+                <p className="text-[#FF9900] text-[7px] sm:text-[8px] font-bold uppercase tracking-widest">Workspace</p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-2 bg-[#161b22] px-3 py-1.5 rounded-md border border-[#30363d]">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium text-gray-400">Connected</span>
+            <div className="flex items-center gap-2">
+              {/* Mobile status indicator */}
+              <div className="sm:hidden flex items-center gap-1.5 bg-[#161b22] px-2 py-1 rounded border border-[#30363d]">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-[10px] text-gray-400">Ready</span>
+              </div>
+              {/* Desktop status */}
+              <div className="hidden sm:flex items-center gap-2 bg-[#161b22] px-3 py-1.5 rounded-md border border-[#30363d]">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs font-medium text-gray-400">Connected</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex flex-col sm:flex-row min-h-[calc(100vh-200px)] sm:h-[800px]">
+          {/* Mobile Bottom Navigation */}
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#0d1117] border-t border-[#30363d] px-2 py-2 z-50">
+            <div className="flex justify-around items-center max-w-md mx-auto">
+              <button 
+                onClick={() => setMobileView("scan")}
+                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-colors ${mobileView === "scan" ? "bg-[#FF9900]/20 text-[#FF9900]" : "text-gray-400"}`}
+              >
+                <ThemedIcon variant="key" size="sm" active={mobileView === "scan"} />
+                <span className="text-[10px] font-medium">Scan</span>
+              </button>
+              <button 
+                onClick={() => { setMobileView("services"); handleTabClick("aws-services.json"); }}
+                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-colors ${mobileView === "services" ? "bg-[#FF9900]/20 text-[#FF9900]" : "text-gray-400"}`}
+              >
+                <ThemedIcon variant="grid" size="sm" active={mobileView === "services"} />
+                <span className="text-[10px] font-medium">Services</span>
+              </button>
+              <button 
+                onClick={() => setMobileView("chat")}
+                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-colors ${mobileView === "chat" ? "bg-[#FF9900]/20 text-[#FF9900]" : "text-gray-400"}`}
+              >
+                <ThemedIcon variant="d" size="sm" active={mobileView === "chat"} />
+                <span className="text-[10px] font-medium">Chat</span>
+              </button>
+              <button 
+                onClick={() => setMobileView("terminal")}
+                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-colors ${mobileView === "terminal" ? "bg-[#FF9900]/20 text-[#FF9900]" : "text-gray-400"}`}
+              >
+                <ThemedIcon variant="terminal" size="sm" active={mobileView === "terminal"} />
+                <span className="text-[10px] font-medium">Logs</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Content Area */}
+          <div className="sm:hidden">
+            {/* Scan View */}
+            {mobileView === "scan" && (
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-4 space-y-4">
+                <div className="text-center space-y-2">
+                  <h2 className="text-xl font-black text-white">Connect AWS Account</h2>
+                  <p className="text-gray-400 text-xs">Enter your credentials to analyze infrastructure costs.</p>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Access Key ID</label>
+                    <input
+                      type="text"
+                      placeholder="AKIA..."
+                      value={credentials.accessKeyId}
+                      onChange={(e) => setCredentials(prev => ({ ...prev, accessKeyId: e.target.value }))}
+                      className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-3 text-sm text-white focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Secret Access Key</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••••••••••"
+                      value={credentials.secretAccessKey}
+                      onChange={(e) => setCredentials(prev => ({ ...prev, secretAccessKey: e.target.value }))}
+                      className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-3 text-sm text-white focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] outline-none"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleVerify}
+                  disabled={!credentials.accessKeyId || !credentials.secretAccessKey}
+                  className="w-full bg-[#FF9900] hover:bg-[#e68a00] disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-3.5 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                  <DLogo size="xs" />
+                  <span>ANALYZE INFRASTRUCTURE</span>
+                </button>
+
+                <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3">
+                  <h4 className="text-xs font-bold text-white mb-1.5 flex items-center gap-1.5">
+                    <DLogo size="xs" />
+                    Security Notice
+                  </h4>
+                  <p className="text-[10px] text-gray-400 leading-relaxed">
+                    Use an IAM user with ReadOnlyAccess policy. Dzera only reads resources and never modifies your account.
+                  </p>
+                </div>
+
+                {/* Quick Links */}
+                <div className="flex gap-2">
+                  <a href="/why-dzera" className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2.5 text-center text-xs text-gray-400 hover:text-[#FF9900] hover:border-[#FF9900]/50 transition-colors">
+                    Documentation
+                  </a>
+                  <a href="https://github.com/stalkiq/dzera" target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2.5 text-center text-xs text-gray-400 hover:text-[#FF9900] hover:border-[#FF9900]/50 transition-colors">
+                    GitHub
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Services View */}
+            {mobileView === "services" && (
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <ThemedIcon variant="grid" size="sm" active />
+                    AWS Services
+                  </h2>
+                  <button onClick={() => setShowCommandPalette(true)} className="text-gray-400 hover:text-[#FF9900] p-1.5 bg-[#161b22] rounded-lg border border-[#30363d]">
+                    <ThemedIcon variant="search" size="sm" />
+                  </button>
+                </div>
+                
+                <input 
+                  type="text"
+                  placeholder="Filter services..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-[#FF9900] outline-none"
+                />
+
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                  {[
+                    { cat: "Compute", items: ["EC2", "Lambda", "Lightsail", "Fargate"] },
+                    { cat: "Storage", items: ["S3", "EBS", "EFS", "Glacier"] },
+                    { cat: "Database", items: ["RDS", "DynamoDB", "Aurora", "ElastiCache"] },
+                    { cat: "Network", items: ["VPC", "CloudFront", "NAT Gateway", "API Gateway"] },
+                  ].filter(g => g.items.some(i => i.toLowerCase().includes(searchQuery.toLowerCase()))).map(group => (
+                    <div key={group.cat} className="bg-[#161b22] rounded-lg p-3 border border-[#30363d]">
+                      <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">{group.cat}</h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.items.filter(i => i.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
+                          <button
+                            key={item}
+                            onClick={() => handleServiceClick(item)}
+                            className="bg-[#0d1117] text-gray-300 text-xs px-2.5 py-1.5 rounded border border-[#30363d] hover:border-[#FF9900]/50 hover:text-[#FF9900] transition-colors"
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Chat View */}
+            {mobileView === "chat" && (
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 180px)' }}>
+                <div className="h-10 bg-[#161b22] flex items-center border-b border-[#30363d] px-3">
+                  <span className="text-xs font-bold text-gray-400">Dzera Assistant</span>
+                </div>
+                <ChatInterface />
+              </div>
+            )}
+
+            {/* Terminal View */}
+            {mobileView === "terminal" && (
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 180px)' }}>
+                <div className="h-10 bg-[#161b22] flex items-center justify-between border-b border-[#30363d] px-3">
+                  <div className="flex items-center gap-2">
+                    <ThemedIcon variant="terminal" size="xs" active />
+                    <span className="text-xs font-bold text-gray-400">Terminal</span>
+                  </div>
+                  <button onClick={() => setLogs([])} className="text-[10px] text-gray-500 hover:text-white">Clear</button>
+                </div>
+                <div className="p-3 h-[calc(100%-40px)] overflow-y-auto font-mono text-xs space-y-1">
+                  {logs.length === 0 ? (
+                    <p className="text-gray-500">Awaiting analysis initialization...</p>
+                  ) : (
+                    logs.map((log, idx) => (
+                      <div key={idx} className={`flex items-start gap-2 ${
+                        log.type === 'error' ? 'text-red-400' : 
+                        log.type === 'warn' ? 'text-yellow-400' : 
+                        log.type === 'success' ? 'text-green-400' : 'text-gray-300'
+                      }`}>
+                        <span className="text-gray-600 shrink-0">[{new Date().toLocaleTimeString()}]</span>
+                        <span>{log.msg}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden sm:block">
+            <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex flex-row h-[800px]">
             {/* Activity Bar - Hidden on mobile */}
             <div className="hidden sm:flex w-12 bg-[#0d1117] border-r border-[#30363d] flex-col items-center py-3 gap-2">
               <div className="group relative">
@@ -1324,13 +1523,14 @@ export default function Home() {
                 <ChatInterface className="h-full border-l-0" />
               </div>
             </div>
+            </div>
           </div>
         </div>
 
-        {/* Mobile FAB for Search */}
+        {/* Command Palette - works on all screen sizes */}
         <button 
           onClick={() => setShowCommandPalette(true)}
-          className="sm:hidden fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#FF9900] rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+          className="hidden sm:flex fixed bottom-6 right-6 z-40 w-14 h-14 bg-[#FF9900] rounded-full shadow-lg items-center justify-center active:scale-95 transition-transform"
           aria-label="Search"
         >
           <ThemedIcon variant="search" size="md" active />
