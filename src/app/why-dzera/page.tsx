@@ -110,8 +110,8 @@ export default function WhyDzeraPage() {
         <p className="text-sm text-gray-500">From AWS Dzera Documentation</p>
       </div>
 
-      {/* Infobox */}
-      <div className="float-right ml-6 mb-6 w-80 bg-gray-50 border border-gray-300 p-4 text-sm">
+      {/* Infobox - Full width on mobile, float right on larger screens */}
+      <div className="w-full sm:float-right sm:ml-6 mb-6 sm:w-80 bg-gray-50 border border-gray-300 p-4 text-sm">
         <div className="text-center mb-3">
           <div className="w-full h-32 bg-gradient-to-br from-[#232f3e] to-[#131A22] rounded flex items-center justify-center mb-2">
             <DLogo size="xl" variant="orange" />

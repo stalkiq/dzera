@@ -640,15 +640,15 @@ export default function Home() {
                 <p className="text-[#FF9900] text-[8px] font-bold uppercase tracking-widest">Workspace</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-[#161b22] px-3 py-1.5 rounded-md border border-[#30363d]">
+            <div className="hidden sm:flex items-center gap-2 bg-[#161b22] px-3 py-1.5 rounded-md border border-[#30363d]">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-xs font-medium text-gray-400">Connected</span>
             </div>
           </div>
 
-          <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex h-[800px]">
-            {/* Activity Bar */}
-            <div className="w-12 bg-[#0d1117] border-r border-[#30363d] flex flex-col items-center py-3 gap-2">
+          <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex flex-col sm:flex-row min-h-[calc(100vh-200px)] sm:h-[800px]">
+            {/* Activity Bar - Hidden on mobile */}
+            <div className="hidden sm:flex w-12 bg-[#0d1117] border-r border-[#30363d] flex-col items-center py-3 gap-2">
               <div className="group relative">
                 <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
                   <ThemedIcon variant="files" size="sm" active={activeTab === "credentials.aws"} />
@@ -1193,9 +1193,18 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Mobile FAB for Search */}
+        <button 
+          onClick={() => setShowCommandPalette(true)}
+          className="sm:hidden fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#FF9900] rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Search"
+        >
+          <ThemedIcon variant="search" size="md" active />
+        </button>
+
         {/* Command Palette Modal */}
         {showCommandPalette && (
-          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" onClick={() => setShowCommandPalette(false)}>
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-4 sm:pt-[15vh] px-3 sm:px-4" onClick={() => setShowCommandPalette(false)}>
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             
@@ -1205,7 +1214,7 @@ export default function Home() {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Search Header */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-[#30363d]">
+              <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-[#30363d]">
                 <ThemedIcon variant="search" size="md" active />
                 <input
                   ref={searchInputRef}
@@ -1213,15 +1222,18 @@ export default function Home() {
                   value={commandSearch}
                   onChange={(e) => setCommandSearch(e.target.value)}
                   onKeyDown={handleSearchKeyDown}
-                  placeholder="Search services, actions, commands, or documentation..."
+                  placeholder="Search..."
                   className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 outline-none"
                   autoComplete="off"
                   spellCheck={false}
                 />
-                <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                <div className="hidden sm:flex items-center gap-1 text-[10px] text-gray-500">
                   <kbd className="px-1.5 py-0.5 bg-[#161b22] border border-[#30363d] rounded text-gray-400">ESC</kbd>
                   <span>to close</span>
                 </div>
+                <button onClick={() => setShowCommandPalette(false)} className="sm:hidden text-gray-400 hover:text-white p-1">
+                  <X size={18} />
+                </button>
               </div>
 
               {/* Filter Tabs */}
