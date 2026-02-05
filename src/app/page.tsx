@@ -987,40 +987,132 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {[
-                        { cat: "Compute", items: ["EC2", "Lightsail", "Lambda", "Batch", "Elastic Beanstalk", "App Runner", "Fargate"] },
-                        { cat: "Containers", items: ["ECS", "EKS", "ECR", "App Mesh"] },
-                        { cat: "Storage", items: ["S3", "EFS", "FSx", "S3 Glacier", "Storage Gateway", "AWS Backup"] },
-                        { cat: "Database", items: ["RDS", "Aurora", "DynamoDB", "ElastiCache", "Neptune", "DocumentDB", "Redshift"] },
-                        { cat: "Networking", items: ["VPC", "CloudFront", "API Gateway", "Route 53", "Direct Connect", "Global Accelerator", "NAT Gateway", "Elastic IP"] },
-                        { cat: "Developer Tools", items: ["CodeCommit", "CodeBuild", "CodeDeploy", "CodePipeline", "Cloud9", "CloudShell", "X-Ray"] },
-                        { cat: "Management", items: ["CloudWatch", "CloudFormation", "Config", "Systems Manager", "Trusted Advisor", "CloudTrail"] },
-                        { cat: "Machine Learning", items: ["SageMaker", "Bedrock", "Comprehend", "Rekognition", "Textract", "Polly", "Lex"] },
-                        { cat: "Analytics", items: ["Athena", "EMR", "Kinesis", "QuickSight", "Glue", "OpenSearch", "MSK"] },
-                        { cat: "Security", items: ["IAM", "Cognito", "Secrets Manager", "KMS", "WAF", "Shield", "GuardDuty", "Inspector"] },
-                        { cat: "Integration", items: ["SNS", "SQS", "EventBridge", "Step Functions", "MQ", "AppFlow"] },
-                        { cat: "Cost Management", items: ["Cost Explorer", "Budgets", "Savings Plans", "Reserved Instances"] }
+                        { cat: "Compute", desc: "Virtual servers and serverless computing", items: [
+                          { name: "EC2", desc: "Elastic Compute Cloud - Virtual servers in the cloud. Launch instances with various CPU, memory, and storage configurations. Pay by the hour/second for compute capacity. Ideal for applications needing full OS control." },
+                          { name: "Lightsail", desc: "Simplified VPS hosting with pre-configured environments. Fixed monthly pricing includes compute, storage, and data transfer. Best for simple websites, blogs, and small applications." },
+                          { name: "Lambda", desc: "Serverless compute that runs code without provisioning servers. Triggered by events (API calls, file uploads, schedules). Pay only for execution time in 1ms increments. Auto-scales from zero to thousands of requests." },
+                          { name: "Batch", desc: "Managed batch computing that dynamically provisions compute resources. Runs hundreds of thousands of jobs efficiently. Automatically scales based on job queue depth." },
+                          { name: "Elastic Beanstalk", desc: "PaaS that handles infrastructure for web apps. Upload code and it automatically deploys, load balances, and scales. Supports Java, .NET, PHP, Node.js, Python, Ruby, Go, and Docker." },
+                          { name: "App Runner", desc: "Fully managed container service for web apps. Build and deploy from source code or container images. Automatic scaling, load balancing, and encryption included." },
+                          { name: "Fargate", desc: "Serverless compute engine for containers. Run containers without managing EC2 instances. Pay for vCPU and memory used by containers. Works with ECS and EKS." }
+                        ]},
+                        { cat: "Containers", desc: "Docker and Kubernetes orchestration", items: [
+                          { name: "ECS", desc: "Elastic Container Service - Fully managed container orchestration. Run Docker containers at scale with deep AWS integration. Choose EC2 or Fargate launch types." },
+                          { name: "EKS", desc: "Elastic Kubernetes Service - Managed Kubernetes control plane. Run K8s workloads without managing master nodes. Compatible with standard K8s tooling and plugins." },
+                          { name: "ECR", desc: "Elastic Container Registry - Secure Docker image repository. Integrated with ECS/EKS for seamless deployments. Supports image scanning for vulnerabilities." },
+                          { name: "App Mesh", desc: "Service mesh for microservices communication. Provides traffic management, observability, and security. Works with ECS, EKS, Fargate, and EC2." }
+                        ]},
+                        { cat: "Storage", desc: "Object, file, and block storage solutions", items: [
+                          { name: "S3", desc: "Simple Storage Service - Scalable object storage with 99.999999999% durability. Store unlimited data as objects up to 5TB each. Multiple storage classes for cost optimization (Standard, Intelligent-Tiering, Glacier)." },
+                          { name: "EFS", desc: "Elastic File System - Managed NFS file storage for EC2. Automatically grows/shrinks as files are added/removed. Supports thousands of concurrent connections." },
+                          { name: "FSx", desc: "Fully managed file systems - Windows File Server (SMB) or Lustre (HPC). Sub-millisecond latencies for demanding workloads. Native Windows AD integration." },
+                          { name: "S3 Glacier", desc: "Long-term archive storage at lowest cost. Retrieval times from minutes to hours. Ideal for compliance archives, backup, and disaster recovery." },
+                          { name: "Storage Gateway", desc: "Hybrid cloud storage connecting on-premises to S3. File, volume, and tape gateway modes. Caches frequently accessed data locally." },
+                          { name: "AWS Backup", desc: "Centralized backup service across AWS services. Policy-based backup scheduling and retention. Cross-region and cross-account backup copies." }
+                        ]},
+                        { cat: "Database", desc: "Relational, NoSQL, and caching databases", items: [
+                          { name: "RDS", desc: "Relational Database Service - Managed MySQL, PostgreSQL, MariaDB, Oracle, SQL Server. Automated backups, patching, and Multi-AZ failover. Read replicas for scaling read-heavy workloads." },
+                          { name: "Aurora", desc: "MySQL/PostgreSQL-compatible with 5x better performance. Auto-scales storage up to 128TB. Serverless option scales compute based on demand." },
+                          { name: "DynamoDB", desc: "Serverless NoSQL database with single-digit millisecond latency. Automatic scaling handles millions of requests/second. Global tables for multi-region replication." },
+                          { name: "ElastiCache", desc: "Managed Redis or Memcached for in-memory caching. Sub-millisecond response times for real-time apps. Cluster mode for horizontal scaling." },
+                          { name: "Neptune", desc: "Graph database for highly connected datasets. Supports Apache TinkerPop Gremlin and SPARQL. Ideal for social networks, fraud detection, recommendations." },
+                          { name: "DocumentDB", desc: "MongoDB-compatible document database. Scalable, durable, and fully managed. Automatic backups and point-in-time recovery." },
+                          { name: "Redshift", desc: "Petabyte-scale data warehouse with columnar storage. Massively parallel processing (MPP) for fast analytics. Integrates with BI tools and data lakes." }
+                        ]},
+                        { cat: "Networking", desc: "Network infrastructure and content delivery", items: [
+                          { name: "VPC", desc: "Virtual Private Cloud - Isolated network environment in AWS. Define IP ranges, subnets, route tables, and gateways. Security groups and NACLs for traffic control." },
+                          { name: "CloudFront", desc: "Global CDN with 400+ edge locations. Caches content close to users for low latency. Integrates with S3, EC2, Lambda@Edge for dynamic content." },
+                          { name: "API Gateway", desc: "Create, publish, and manage REST/WebSocket APIs. Handles authentication, throttling, and caching. Integrates with Lambda for serverless backends." },
+                          { name: "Route 53", desc: "Scalable DNS with health checking and traffic routing. Supports domain registration and DNSSEC. Routing policies: simple, weighted, latency, geolocation, failover." },
+                          { name: "Direct Connect", desc: "Dedicated network connection to AWS. Bypass internet for consistent, low-latency performance. 1Gbps to 100Gbps connection speeds." },
+                          { name: "Global Accelerator", desc: "Improve availability with AWS global network. Static IP addresses route to nearest healthy endpoint. 60% improvement in internet user performance." },
+                          { name: "NAT Gateway", desc: "Enable private subnet instances to access internet. Managed, highly available NAT service. Charged per hour plus data processed - common cost driver." },
+                          { name: "Elastic IP", desc: "Static public IPv4 address for dynamic cloud computing. Free when attached to running instance. Charged when idle - watch for orphaned IPs." }
+                        ]},
+                        { cat: "Developer Tools", desc: "CI/CD and development environments", items: [
+                          { name: "CodeCommit", desc: "Managed Git repositories with encryption. Unlimited repos with no storage limits. Integrates with AWS developer tools and third-party tools." },
+                          { name: "CodeBuild", desc: "Fully managed build service compiling code and running tests. Pre-configured environments for popular languages. Pay only for build minutes used." },
+                          { name: "CodeDeploy", desc: "Automated deployments to EC2, Fargate, Lambda, on-premises. Blue/green and rolling deployment strategies. Automatic rollback on failure." },
+                          { name: "CodePipeline", desc: "Continuous delivery service for release automation. Orchestrates build, test, and deploy phases. Visual workflow editor and integrations." },
+                          { name: "Cloud9", desc: "Cloud-based IDE accessible from any browser. Pre-configured environments with AWS CLI. Real-time collaborative editing." },
+                          { name: "CloudShell", desc: "Browser-based shell with AWS CLI pre-installed. 1GB persistent storage per region. Pre-authenticated with console credentials." },
+                          { name: "X-Ray", desc: "Distributed tracing for debugging microservices. Visual service map shows request flows. Identify performance bottlenecks and errors." }
+                        ]},
+                        { cat: "Management", desc: "Monitoring, automation, and governance", items: [
+                          { name: "CloudWatch", desc: "Monitoring service for AWS resources and applications. Collect metrics, logs, and events. Set alarms and automate actions based on thresholds." },
+                          { name: "CloudFormation", desc: "Infrastructure as Code using YAML/JSON templates. Provision and manage AWS resources consistently. Stack updates with change sets and rollback." },
+                          { name: "Config", desc: "Track resource configurations and changes over time. Evaluate compliance with desired configurations. Rules-based remediation of non-compliant resources." },
+                          { name: "Systems Manager", desc: "Unified interface for operational tasks. Patch management, run commands, parameter storage. Session Manager for secure shell access without SSH keys." },
+                          { name: "Trusted Advisor", desc: "Best practice recommendations across five categories. Cost optimization, security, fault tolerance, performance, service limits. Real-time guidance to improve AWS environment." },
+                          { name: "CloudTrail", desc: "Log and monitor all API activity across AWS. Track who did what, when, and from where. Essential for security analysis and compliance auditing." }
+                        ]},
+                        { cat: "Machine Learning", desc: "AI/ML services and model training", items: [
+                          { name: "SageMaker", desc: "End-to-end ML platform for building, training, and deploying models. Jupyter notebooks, built-in algorithms, and AutoML. Managed infrastructure for any scale." },
+                          { name: "Bedrock", desc: "Access foundation models from AI21, Anthropic, Stability AI, and Amazon. Build generative AI apps without managing infrastructure. Fine-tune models with your data." },
+                          { name: "Comprehend", desc: "Natural Language Processing service. Extract insights from text: sentiment, entities, key phrases, language. Custom classification and entity recognition." },
+                          { name: "Rekognition", desc: "Image and video analysis with deep learning. Detect objects, faces, text, scenes, activities. Content moderation and celebrity recognition." },
+                          { name: "Textract", desc: "Extract text, handwriting, and data from documents. Understand forms and tables automatically. Process invoices, receipts, and ID documents." },
+                          { name: "Polly", desc: "Text-to-speech service with lifelike voices. 60+ voices in 30+ languages. Neural TTS for natural-sounding speech." },
+                          { name: "Lex", desc: "Build conversational interfaces using voice and text. Same technology as Alexa. Create chatbots for web, mobile, and messaging platforms." }
+                        ]},
+                        { cat: "Analytics", desc: "Data processing and business intelligence", items: [
+                          { name: "Athena", desc: "Serverless SQL queries directly on S3 data. Pay only for data scanned. Supports CSV, JSON, Parquet, ORC formats." },
+                          { name: "EMR", desc: "Managed Hadoop/Spark clusters for big data processing. Process petabytes of data cost-effectively. Supports Hive, Presto, HBase, Flink." },
+                          { name: "Kinesis", desc: "Real-time data streaming at any scale. Ingest and process millions of records per second. Data Streams, Firehose, and Analytics services." },
+                          { name: "QuickSight", desc: "Serverless business intelligence at scale. Create interactive dashboards and reports. ML-powered insights and natural language queries." },
+                          { name: "Glue", desc: "Serverless ETL service for data preparation. Discover and catalog data automatically. Transform data for analytics and ML." },
+                          { name: "OpenSearch", desc: "Search and analytics suite (Elasticsearch fork). Full-text search, log analytics, real-time monitoring. Managed clusters with built-in Kibana." },
+                          { name: "MSK", desc: "Managed Streaming for Apache Kafka. Fully managed, highly available Kafka clusters. Compatible with existing Kafka applications." }
+                        ]},
+                        { cat: "Security", desc: "Identity, encryption, and threat detection", items: [
+                          { name: "IAM", desc: "Identity and Access Management - Control who can do what in AWS. Users, groups, roles, and policies. MFA support and fine-grained permissions." },
+                          { name: "Cognito", desc: "User authentication for web and mobile apps. User pools for sign-up/sign-in. Identity pools for temporary AWS credentials." },
+                          { name: "Secrets Manager", desc: "Securely store and rotate secrets (passwords, API keys). Automatic rotation for RDS, Redshift, DocumentDB. Audit secret access with CloudTrail." },
+                          { name: "KMS", desc: "Key Management Service - Create and control encryption keys. Integrated with 100+ AWS services. Hardware security modules (HSM) backed." },
+                          { name: "WAF", desc: "Web Application Firewall protecting against web exploits. Block SQL injection, XSS, and other attacks. Managed rules and custom rules." },
+                          { name: "Shield", desc: "DDoS protection service. Standard (free) protects against common attacks. Advanced provides 24/7 DDoS response team." },
+                          { name: "GuardDuty", desc: "Intelligent threat detection using ML. Analyzes CloudTrail, VPC Flow Logs, DNS logs. Detects account compromise, instance compromise, reconnaissance." },
+                          { name: "Inspector", desc: "Automated vulnerability management for EC2 and containers. Continuous scanning and prioritized findings. Integration with Security Hub." }
+                        ]},
+                        { cat: "Integration", desc: "Messaging and workflow orchestration", items: [
+                          { name: "SNS", desc: "Simple Notification Service - Pub/sub messaging for microservices. Push notifications to mobile, email, SMS, HTTP. Fan-out to multiple subscribers." },
+                          { name: "SQS", desc: "Simple Queue Service - Fully managed message queuing. Decouple components with reliable delivery. Standard (at-least-once) and FIFO (exactly-once) queues." },
+                          { name: "EventBridge", desc: "Serverless event bus for application integration. Route events between AWS services, SaaS apps, and custom apps. Schema registry and event archive." },
+                          { name: "Step Functions", desc: "Visual workflow service for distributed applications. Orchestrate Lambda, ECS, API calls, and more. Built-in error handling and retry logic." },
+                          { name: "MQ", desc: "Managed message broker for ActiveMQ and RabbitMQ. Migrate existing messaging apps without rewriting. Industry-standard APIs and protocols." },
+                          { name: "AppFlow", desc: "Securely transfer data between SaaS and AWS. Connect to Salesforce, ServiceNow, Slack, and more. Transform and validate data during transfer." }
+                        ]},
+                        { cat: "Cost Management", desc: "Billing optimization and forecasting", items: [
+                          { name: "Cost Explorer", desc: "Visualize and analyze AWS spending patterns. Filter by service, region, account, tag. Forecast future costs based on historical usage." },
+                          { name: "Budgets", desc: "Set custom budgets and receive alerts. Track costs, usage, and reservations. Automate actions when thresholds are exceeded." },
+                          { name: "Savings Plans", desc: "Flexible pricing model with up to 72% savings. Commit to consistent compute usage ($/hour). Applies automatically to eligible usage." },
+                          { name: "Reserved Instances", desc: "Significant discounts for 1 or 3-year commitments. Up to 75% savings compared to On-Demand. Standard RIs for predictable workloads, Convertible for flexibility." }
+                        ]}
                       ].filter(group => 
                         group.cat.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                        group.items.some(item => item.toLowerCase().includes(searchQuery.toLowerCase()))
+                        group.items.some(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.desc.toLowerCase().includes(searchQuery.toLowerCase()))
                       ).map((group) => (
                         <div key={group.cat} className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden flex flex-col hover:border-[#FF9900]/30 transition-colors">
-                          <div className="bg-[#0d1117] px-4 py-2 border-b border-[#30363d]">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{group.cat}</h3>
+                          <div className="bg-[#0d1117] px-4 py-3 border-b border-[#30363d]">
+                            <h3 className="text-sm font-bold text-white">{group.cat}</h3>
+                            <p className="text-[10px] text-gray-500 mt-0.5">{group.desc}</p>
                           </div>
-                          <div className="p-4 flex-1">
-                            <div className="flex flex-wrap gap-2">
-                              {group.items.filter(item => item.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
-                                <button 
-                                  key={item} 
-                                  onClick={() => handleServiceClick(item)}
-                                  className={`bg-[#0d1117] border text-[10px] px-2 py-1 rounded cursor-pointer transition-all hover:scale-105 active:scale-95 ${selectedService === item ? "text-[#FF9900] border-[#FF9900] bg-[#FF9900]/10" : "text-gray-300 border-[#30363d] hover:text-[#FF9900] hover:border-[#FF9900]/50"}`}
-                                >
-                                  {item}
-                                </button>
-                              ))}
-                            </div>
+                          <div className="p-3 flex-1 space-y-2 max-h-[400px] overflow-y-auto">
+                            {group.items.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.desc.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
+                              <button 
+                                key={item.name} 
+                                onClick={() => handleServiceClick(item.name)}
+                                className={`w-full text-left bg-[#0d1117] border rounded-lg p-3 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] ${selectedService === item.name ? "text-[#FF9900] border-[#FF9900] bg-[#FF9900]/5" : "text-gray-300 border-[#30363d] hover:border-[#FF9900]/50"}`}
+                              >
+                                <div className="flex items-center gap-2 mb-1">
+                                  <DLogo size="xs" active={selectedService === item.name} />
+                                  <span className="text-xs font-bold">{item.name}</span>
+                                </div>
+                                <p className="text-[10px] text-gray-500 leading-relaxed line-clamp-2">{item.desc}</p>
+                              </button>
+                            ))}
                           </div>
                         </div>
                       ))}
