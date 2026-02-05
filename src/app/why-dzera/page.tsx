@@ -118,31 +118,31 @@ export default function WhyDzeraPage() {
           </div>
           <p className="font-semibold italic">AWS Dzera</p>
         </div>
-        <table className="w-full">
+        <table className="w-full text-gray-900">
           <tbody>
             <tr className="border-t border-gray-300">
-              <td className="font-semibold py-1 pr-2">Type:</td>
-              <td className="py-1">FinOps Platform</td>
+              <td className="font-semibold py-1 pr-2 text-black">Type:</td>
+              <td className="py-1 text-gray-800">FinOps Platform</td>
             </tr>
             <tr className="border-t border-gray-300">
-              <td className="font-semibold py-1 pr-2">Purpose:</td>
-              <td className="py-1">Infrastructure Cost Analysis</td>
+              <td className="font-semibold py-1 pr-2 text-black">Purpose:</td>
+              <td className="py-1 text-gray-800">Infrastructure Cost Analysis</td>
             </tr>
             <tr className="border-t border-gray-300">
-              <td className="font-semibold py-1 pr-2">Method:</td>
-              <td className="py-1">Real-Time Resource Scanning</td>
+              <td className="font-semibold py-1 pr-2 text-black">Method:</td>
+              <td className="py-1 text-gray-800">Real-Time Resource Scanning</td>
             </tr>
             <tr className="border-t border-gray-300">
-              <td className="font-semibold py-1 pr-2">Access:</td>
-              <td className="py-1">Read-Only Permissions</td>
+              <td className="font-semibold py-1 pr-2 text-black">Access:</td>
+              <td className="py-1 text-gray-800">Read-Only Permissions</td>
             </tr>
             <tr className="border-t border-gray-300">
-              <td className="font-semibold py-1 pr-2">Cost:</td>
-              <td className="py-1">Free</td>
+              <td className="font-semibold py-1 pr-2 text-black">Cost:</td>
+              <td className="py-1 text-gray-800">Free</td>
             </tr>
             <tr className="border-t border-gray-300">
-              <td className="font-semibold py-1 pr-2">License:</td>
-              <td className="py-1">MIT</td>
+              <td className="font-semibold py-1 pr-2 text-black">License:</td>
+              <td className="py-1 text-gray-800">MIT</td>
             </tr>
           </tbody>
         </table>
