@@ -152,20 +152,146 @@ const serviceDescriptions: Record<string, { desc: string; scans: string[] }> = {
 };
 
 // Subtle D Triangle Logo Component
-const DLogo = ({ size = "sm", active = false }: { size?: "xs" | "sm" | "md" | "lg"; active?: boolean }) => {
+// Themed icon system matching the diamond D style
+type IconVariant = "d" | "files" | "chart" | "gear" | "grid" | "user" | "book" | "refresh" | "search" | "terminal" | "key" | "cloud";
+
+const ThemedIcon = ({ 
+  variant = "d", 
+  size = "sm", 
+  active = false 
+}: { 
+  variant?: IconVariant;
+  size?: "xs" | "sm" | "md" | "lg"; 
+  active?: boolean 
+}) => {
   const sizes = {
-    xs: { wrapper: "w-3 h-3", text: "text-[6px]" },
-    sm: { wrapper: "w-4 h-4", text: "text-[8px]" },
-    md: { wrapper: "w-6 h-6", text: "text-[10px]" },
-    lg: { wrapper: "w-8 h-8", text: "text-sm" }
+    xs: { wrapper: "w-3 h-3", icon: 8 },
+    sm: { wrapper: "w-4 h-4", icon: 10 },
+    md: { wrapper: "w-6 h-6", icon: 14 },
+    lg: { wrapper: "w-8 h-8", icon: 18 }
   };
+  
+  const iconColor = active ? "#000" : "#9ca3af";
+  const bgColor = active ? "bg-[#FF9900]" : "bg-gray-700";
+  const iconSize = sizes[size].icon;
+  
+  const renderIcon = () => {
+    switch(variant) {
+      case "files":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <rect x="3" y="2" width="7" height="9" rx="1" stroke={iconColor} strokeWidth="1.5" fill="none"/>
+            <rect x="6" y="5" width="7" height="9" rx="1" stroke={iconColor} strokeWidth="1.5" fill={active ? "#FF9900" : "#374151"}/>
+          </svg>
+        );
+      case "chart":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <rect x="2" y="8" width="3" height="6" rx="0.5" fill={iconColor}/>
+            <rect x="6.5" y="5" width="3" height="9" rx="0.5" fill={iconColor}/>
+            <rect x="11" y="2" width="3" height="12" rx="0.5" fill={iconColor}/>
+          </svg>
+        );
+      case "gear":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="2.5" stroke={iconColor} strokeWidth="1.5"/>
+            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3" stroke={iconColor} strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        );
+      case "grid":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <rect x="2" y="2" width="5" height="5" rx="1" fill={iconColor}/>
+            <rect x="9" y="2" width="5" height="5" rx="1" fill={iconColor}/>
+            <rect x="2" y="9" width="5" height="5" rx="1" fill={iconColor}/>
+            <rect x="9" y="9" width="5" height="5" rx="1" fill={iconColor}/>
+          </svg>
+        );
+      case "user":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="5" r="3" stroke={iconColor} strokeWidth="1.5"/>
+            <path d="M2 14c0-3 2.5-5 6-5s6 2 6 5" stroke={iconColor} strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        );
+      case "book":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <path d="M2 3a1 1 0 011-1h4v12H3a1 1 0 01-1-1V3z" fill={iconColor}/>
+            <path d="M8 2h5a1 1 0 011 1v10a1 1 0 01-1 1H8V2z" stroke={iconColor} strokeWidth="1.5"/>
+            <line x1="10" y1="5" x2="12" y2="5" stroke={active ? "#FF9900" : "#374151"} strokeWidth="1"/>
+            <line x1="10" y1="7" x2="12" y2="7" stroke={active ? "#FF9900" : "#374151"} strokeWidth="1"/>
+          </svg>
+        );
+      case "refresh":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <path d="M2 8a6 6 0 0110.5-4M14 8a6 6 0 01-10.5 4" stroke={iconColor} strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M12.5 1v3h-3M3.5 15v-3h3" stroke={iconColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        );
+      case "search":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="4" stroke={iconColor} strokeWidth="1.5"/>
+            <line x1="10" y1="10" x2="14" y2="14" stroke={iconColor} strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        );
+      case "terminal":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="2" width="14" height="12" rx="2" stroke={iconColor} strokeWidth="1.5"/>
+            <path d="M4 6l3 2.5L4 11" stroke={iconColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <line x1="9" y1="11" x2="12" y2="11" stroke={iconColor} strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        );
+      case "key":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <circle cx="5" cy="6" r="3" stroke={iconColor} strokeWidth="1.5"/>
+            <path d="M7.5 8L14 8M11 8v3M14 8v2" stroke={iconColor} strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        );
+      case "cloud":
+        return (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 16 16" fill="none">
+            <path d="M4 11a3 3 0 01-.5-5.95 4.5 4.5 0 018.95.9A2.5 2.5 0 0112 11H4z" stroke={iconColor} strokeWidth="1.5" fill="none"/>
+          </svg>
+        );
+      default: // "d" - the default diamond D logo
+        return (
+          <span className={`relative ${active ? "text-black" : "text-gray-300"} font-black text-[${sizes[size].icon * 0.7}px] z-10`}>D</span>
+        );
+    }
+  };
+  
+  // For the "d" variant, use the original diamond style
+  if (variant === "d") {
+    const textSizes = { xs: "text-[6px]", sm: "text-[8px]", md: "text-[10px]", lg: "text-sm" };
+    return (
+      <div className={`relative ${sizes[size].wrapper} flex items-center justify-center flex-shrink-0`}>
+        <div className={`absolute inset-0 ${bgColor} rotate-45 rounded-[1px] transition-colors`}></div>
+        <span className={`relative ${active ? "text-black" : "text-gray-300"} font-black ${textSizes[size]} z-10`}>D</span>
+      </div>
+    );
+  }
+  
+  // For other icons, use a subtle diamond background with the icon
   return (
     <div className={`relative ${sizes[size].wrapper} flex items-center justify-center flex-shrink-0`}>
-      <div className={`absolute inset-0 ${active ? "bg-[#FF9900]" : "bg-gray-600"} rotate-45 rounded-[1px] transition-colors`}></div>
-      <span className={`relative ${active ? "text-black" : "text-gray-300"} font-black ${sizes[size].text} z-10`}>D</span>
+      <div className={`absolute inset-0 ${bgColor} rotate-45 rounded-[1px] transition-colors opacity-30`}></div>
+      <div className="relative z-10 flex items-center justify-center">
+        {renderIcon()}
+      </div>
     </div>
   );
 };
+
+// Keep DLogo as an alias for the default diamond D
+const DLogo = ({ size = "sm", active = false }: { size?: "xs" | "sm" | "md" | "lg"; active?: boolean }) => (
+  <ThemedIcon variant="d" size={size} active={active} />
+);
 
 export default function Home() {
   const [step, setStep] = useState<"setup" | "scanning" | "results">("setup");
@@ -313,42 +439,49 @@ export default function Home() {
             <div className="w-12 bg-[#0d1117] border-r border-[#30363d] flex flex-col items-center py-4 gap-4">
               <div className="group relative">
                 <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <DLogo size="md" active={activeTab === "credentials.aws"} />
+                  <ThemedIcon variant="files" size="md" active={activeTab === "credentials.aws"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Explorer</div>
               </div>
               
               <div className="group relative">
                 <div onClick={() => handleTabClick("cost-reports.md")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <DLogo size="md" active={activeTab === "cost-reports.md"} />
+                  <ThemedIcon variant="chart" size="md" active={activeTab === "cost-reports.md"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Reports</div>
               </div>
 
               <div className="group relative">
                 <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <DLogo size="md" active={activeTab === "scanner.config"} />
+                  <ThemedIcon variant="gear" size="md" active={activeTab === "scanner.config"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Configuration</div>
               </div>
 
               <div className="group relative">
                 <div onClick={() => handleTabClick("aws-services.json")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <DLogo size="md" active={activeTab === "aws-services.json"} />
+                  <ThemedIcon variant="grid" size="md" active={activeTab === "aws-services.json"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Service Directory</div>
+              </div>
+
+              <div className="group relative">
+                <div onClick={() => handleTabClick("search")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
+                  <ThemedIcon variant="search" size="md" active={activeTab === "search"} />
+                </div>
+                <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Search</div>
               </div>
 
               <div className="mt-auto flex flex-col gap-4 mb-2">
                 <div className="group relative">
                   <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                    <DLogo size="md" active={false} />
+                    <ThemedIcon variant="gear" size="md" active={false} />
                   </div>
                   <div className="absolute left-14 bottom-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Settings</div>
                 </div>
                 <div className="group relative">
                   <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                    <DLogo size="md" active={false} />
+                    <ThemedIcon variant="user" size="md" active={false} />
                   </div>
                   <div className="absolute left-14 bottom-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Account</div>
                 </div>
@@ -360,8 +493,8 @@ export default function Home() {
               <div className="px-4 py-3 flex items-center justify-between border-b border-[#30363d]/50">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Explorer</span>
                 <div className="flex items-center gap-2">
-                  <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer"><DLogo size="xs" /></div>
-                  <div onClick={() => { addLog("Refreshing workspace...", "info"); window.location.reload(); }} className="cursor-pointer"><DLogo size="xs" /></div>
+                  <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer"><ThemedIcon variant="files" size="xs" /></div>
+                  <div onClick={() => { addLog("Refreshing workspace...", "info"); window.location.reload(); }} className="cursor-pointer"><ThemedIcon variant="refresh" size="xs" /></div>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto">
@@ -374,35 +507,49 @@ export default function Home() {
                     onClick={() => handleTabClick("credentials.aws")}
                     className={`flex items-center gap-2 py-1.5 px-4 cursor-pointer transition-all duration-200 rounded-md mx-1 ${activeTab === "credentials.aws" ? "text-[#FF9900] bg-[#FF9900]/10 border-l-2 border-[#FF9900]" : "text-gray-400 hover:bg-[#161b22] hover:text-gray-200"}`}
                   >
-                    <DLogo size="xs" active={activeTab === "credentials.aws"} />
+                    <ThemedIcon variant="key" size="xs" active={activeTab === "credentials.aws"} />
                     <span className="text-xs font-medium">credentials.aws</span>
                   </div>
                   <div 
                     onClick={() => handleTabClick("scanner.config")}
                     className={`flex items-center gap-2 py-1.5 px-4 cursor-pointer transition-all duration-200 rounded-md mx-1 ${activeTab === "scanner.config" ? "text-[#FF9900] bg-[#FF9900]/10 border-l-2 border-[#FF9900]" : "text-gray-400 hover:bg-[#161b22] hover:text-gray-200"}`}
                   >
-                    <DLogo size="xs" active={activeTab === "scanner.config"} />
+                    <ThemedIcon variant="gear" size="xs" active={activeTab === "scanner.config"} />
                     <span className="text-xs font-medium">scanner.config</span>
                   </div>
                   <div 
                     onClick={() => handleTabClick("cost-reports.md")}
                     className={`flex items-center gap-2 py-1.5 px-4 cursor-pointer transition-all duration-200 rounded-md mx-1 ${activeTab === "cost-reports.md" ? "text-[#FF9900] bg-[#FF9900]/10 border-l-2 border-[#FF9900]" : "text-gray-400 hover:bg-[#161b22] hover:text-gray-200"}`}
                   >
-                    <DLogo size="xs" active={activeTab === "cost-reports.md"} />
+                    <ThemedIcon variant="chart" size="xs" active={activeTab === "cost-reports.md"} />
                     <span className="text-xs font-medium">cost-reports.md</span>
                   </div>
                   <div 
                     onClick={() => handleTabClick("aws-services.json")}
                     className={`flex items-center gap-2 py-1.5 px-4 cursor-pointer transition-all duration-200 rounded-md mx-1 ${activeTab === "aws-services.json" ? "text-[#FF9900] bg-[#FF9900]/10 border-l-2 border-[#FF9900]" : "text-gray-400 hover:bg-[#161b22] hover:text-gray-200"}`}
                   >
-                    <DLogo size="xs" active={activeTab === "aws-services.json"} />
+                    <ThemedIcon variant="grid" size="xs" active={activeTab === "aws-services.json"} />
                     <span className="text-xs font-medium">aws-services.json</span>
                   </div>
                   <div className="mt-4 pt-4 border-t border-[#30363d]">
-                    <div className="flex items-center gap-1 py-1 px-2 text-gray-400 group cursor-pointer hover:bg-[#161b22] rounded transition-colors">
-                      <ChevronRight className="w-3 h-3 text-gray-600 group-hover:text-gray-400" />
-                      <span className="text-[11px] font-bold uppercase text-gray-500 group-hover:text-gray-400">Documentation</span>
-                    </div>
+                    <a 
+                      href="/why-dzera" 
+                      className="flex items-center gap-2 py-1.5 px-2 text-gray-400 group cursor-pointer hover:bg-[#161b22] rounded transition-colors"
+                    >
+                      <ThemedIcon variant="book" size="xs" />
+                      <span className="text-[11px] font-bold uppercase text-gray-500 group-hover:text-[#FF9900] transition-colors">Documentation</span>
+                      <ExternalLink className="w-2.5 h-2.5 text-gray-600 ml-auto" />
+                    </a>
+                    <a 
+                      href="https://github.com/stalkiq/dzera" 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 py-1.5 px-2 text-gray-400 group cursor-pointer hover:bg-[#161b22] rounded transition-colors"
+                    >
+                      <ThemedIcon variant="cloud" size="xs" />
+                      <span className="text-[11px] font-bold uppercase text-gray-500 group-hover:text-[#FF9900] transition-colors">GitHub</span>
+                      <ExternalLink className="w-2.5 h-2.5 text-gray-600 ml-auto" />
+                    </a>
                   </div>
                 </div>
               </div>
@@ -605,7 +752,7 @@ export default function Home() {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="space-y-1">
                         <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
-                          <DLogo size="md" active />
+                          <ThemedIcon variant="grid" size="md" active />
                           AWS Service Directory
                         </h2>
                         <p className="text-gray-400 text-xs">Select a service to view optimization analysis parameters.</p>
@@ -897,28 +1044,28 @@ export default function Home() {
             <div className="w-12 bg-[#0d1117] border-r border-[#30363d] flex flex-col items-center py-4 gap-4">
               <div className="group relative">
                 <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <DLogo size="md" active={activeTab === "credentials.aws"} />
+                  <ThemedIcon variant="files" size="md" active={activeTab === "credentials.aws"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Explorer</div>
               </div>
               
               <div className="group relative">
                 <div onClick={() => handleTabClick("cost-reports.md")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <DLogo size="md" active={activeTab === "cost-reports.md"} />
+                  <ThemedIcon variant="chart" size="md" active={activeTab === "cost-reports.md"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Reports</div>
               </div>
 
               <div className="group relative">
                 <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <DLogo size="md" active={activeTab === "scanner.config"} />
+                  <ThemedIcon variant="gear" size="md" active={activeTab === "scanner.config"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Configuration</div>
               </div>
 
               <div className="group relative">
                 <div onClick={() => handleTabClick("aws-services.json")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <DLogo size="md" active={activeTab === "aws-services.json"} />
+                  <ThemedIcon variant="grid" size="md" active={activeTab === "aws-services.json"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Services</div>
               </div>
@@ -926,13 +1073,13 @@ export default function Home() {
               <div className="mt-auto flex flex-col gap-4 mb-2">
                 <div className="group relative">
                   <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                    <DLogo size="md" />
+                    <ThemedIcon variant="gear" size="md" />
                   </div>
                   <div className="absolute left-14 bottom-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Settings</div>
                 </div>
                 <div className="group relative">
                   <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                    <DLogo size="md" />
+                    <ThemedIcon variant="gear" size="md" />
                   </div>
                   <div className="absolute left-14 bottom-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Account</div>
                 </div>
@@ -954,21 +1101,21 @@ export default function Home() {
                     onClick={() => handleTabClick("credentials.aws")}
                     className={`flex items-center gap-2 py-1.5 px-4 cursor-pointer transition-all duration-200 rounded-md mx-1 ${activeTab === "credentials.aws" ? "text-[#FF9900] bg-[#FF9900]/10 border-l-2 border-[#FF9900]" : "text-gray-400 hover:bg-[#161b22] hover:text-gray-200"}`}
                   >
-                    <DLogo size="xs" active={activeTab === "credentials.aws"} />
+                    <ThemedIcon variant="key" size="xs" active={activeTab === "credentials.aws"} />
                     <span className="text-xs font-medium">credentials.aws</span>
                   </div>
                   <div 
                     onClick={() => handleTabClick("scanner.config")}
                     className={`flex items-center gap-2 py-1.5 px-4 cursor-pointer transition-all duration-200 rounded-md mx-1 ${activeTab === "scanner.config" ? "text-[#FF9900] bg-[#FF9900]/10 border-l-2 border-[#FF9900]" : "text-gray-400 hover:bg-[#161b22] hover:text-gray-200"}`}
                   >
-                    <DLogo size="xs" active={activeTab === "scanner.config"} />
+                    <ThemedIcon variant="gear" size="xs" active={activeTab === "scanner.config"} />
                     <span className="text-xs font-medium">scanner.config</span>
                   </div>
                   <div 
                     onClick={() => handleTabClick("cost-reports.md")}
                     className={`flex items-center gap-2 py-1.5 px-4 cursor-pointer transition-all duration-200 rounded-md mx-1 ${activeTab === "cost-reports.md" ? "text-[#FF9900] bg-[#FF9900]/10 border-l-2 border-[#FF9900]" : "text-gray-400 hover:bg-[#161b22] hover:text-gray-200"}`}
                   >
-                    <DLogo size="xs" active={activeTab === "cost-reports.md"} />
+                    <ThemedIcon variant="chart" size="xs" active={activeTab === "cost-reports.md"} />
                     <span className="text-xs font-medium">cost-reports.md</span>
                   </div>
                 </div>
