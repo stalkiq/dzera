@@ -1,8 +1,8 @@
 // src/app/page.tsx
 "use client";
 
-import { useState } from "react";
-import { ExternalLink, X, ChevronRight } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { ExternalLink, X, ChevronRight, Command, ArrowUp, ArrowDown, CornerDownLeft } from "lucide-react";
 import ChatInterface from "@/components/ChatInterface";
 
 type CostFinding = {
@@ -293,6 +293,19 @@ const DLogo = ({ size = "sm", active = false }: { size?: "xs" | "sm" | "md" | "l
   <ThemedIcon variant="d" size={size} active={active} />
 );
 
+// Comprehensive search data structure
+type SearchItem = {
+  id: string;
+  type: "service" | "action" | "command" | "doc" | "pattern" | "insight";
+  title: string;
+  description: string;
+  category: string;
+  keywords: string[];
+  action?: () => void;
+  icon?: string;
+  badge?: string;
+};
+
 export default function Home() {
   const [step, setStep] = useState<"setup" | "scanning" | "results">("setup");
   const [activeTab, setActiveTab] = useState("credentials.aws");
@@ -306,19 +319,50 @@ export default function Home() {
   });
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Command Palette Search State
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [commandSearch, setCommandSearch] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  
+  // Keyboard shortcut to open command palette (Cmd+K / Ctrl+K)
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(true);
+      }
+      if (e.key === 'Escape') {
+        setShowCommandPalette(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+  
+  // Focus search input when palette opens
+  React.useEffect(() => {
+    if (showCommandPalette && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showCommandPalette]);
 
-  const addLog = (msg: string, type: 'info' | 'warn' | 'error' | 'success' = 'info') => {
+  // Core utility functions
+  const addLog = useCallback((msg: string, type: 'info' | 'warn' | 'error' | 'success' = 'info') => {
     setLogs(prev => [...prev, { msg: `[${new Date().toLocaleTimeString()}] ${msg}`, type }]);
-  };
+  }, []);
 
-  const handleTabClick = (tabId: string) => {
+  const handleTabClick = useCallback((tabId: string) => {
     if (!openTabs.includes(tabId)) {
-      setOpenTabs([...openTabs, tabId]);
+      setOpenTabs(prev => [...prev, tabId]);
     }
     setActiveTab(tabId);
-  };
+  }, [openTabs]);
 
-  const closeTab = (e: React.MouseEvent, tabId: string) => {
+  const closeTab = useCallback((e: React.MouseEvent, tabId: string) => {
     e.stopPropagation();
     if (openTabs.length === 1) return;
     const newTabs = openTabs.filter(t => t !== tabId);
@@ -326,23 +370,191 @@ export default function Home() {
     if (activeTab === tabId) {
       setActiveTab(newTabs[newTabs.length - 1]);
     }
-  };
+  }, [openTabs, activeTab]);
 
-  const handleServiceClick = (service: string) => {
+  const handleServiceClick = useCallback((service: string) => {
     setSelectedService(service);
     addLog(`Analyzing ${service} configuration...`, "info");
     addLog(`Retrieving optimization recommendations for ${service}...`, "success");
     
     const tabId = `${service.toLowerCase().replace(/\s+/g, '-')}.md`;
-    if (!openTabs.includes(tabId)) {
-      setOpenTabs([...openTabs, tabId]);
-    }
+    setOpenTabs(prev => prev.includes(tabId) ? prev : [...prev, tabId]);
     setActiveTab(tabId);
 
     setTimeout(() => {
       addLog(`${service} analysis complete.`, "info");
     }, 800);
-  };
+  }, [addLog]);
+
+  // Comprehensive search items database
+  const searchItems = useMemo<SearchItem[]>(() => [
+    // AWS Services - Compute
+    { id: "ec2", type: "service", title: "EC2 Instances", description: "Analyze running instances, rightsizing opportunities, and Reserved Instance coverage", category: "Compute", keywords: ["ec2", "instance", "server", "compute", "vm", "virtual machine"], badge: "Hot" },
+    { id: "lambda", type: "service", title: "Lambda Functions", description: "Review function invocations, memory allocation, and provisioned concurrency costs", category: "Compute", keywords: ["lambda", "serverless", "function", "faas"] },
+    { id: "fargate", type: "service", title: "Fargate Tasks", description: "Container runtime costs and task configuration analysis", category: "Compute", keywords: ["fargate", "container", "ecs", "task"] },
+    { id: "lightsail", type: "service", title: "Lightsail VPS", description: "Simple VPS instances and associated resources", category: "Compute", keywords: ["lightsail", "vps", "simple"] },
+    
+    // AWS Services - Storage
+    { id: "s3", type: "service", title: "S3 Buckets", description: "Storage class optimization, lifecycle policies, and versioning costs", category: "Storage", keywords: ["s3", "storage", "bucket", "object", "archive"], badge: "Hot" },
+    { id: "ebs", type: "service", title: "EBS Volumes", description: "Unattached volumes, snapshot costs, and IOPS provisioning", category: "Storage", keywords: ["ebs", "volume", "disk", "storage", "snapshot"] },
+    { id: "efs", type: "service", title: "EFS File Systems", description: "Elastic file storage throughput and storage class analysis", category: "Storage", keywords: ["efs", "file", "nfs", "elastic"] },
+    { id: "glacier", type: "service", title: "S3 Glacier", description: "Archive storage retrieval costs and tier optimization", category: "Storage", keywords: ["glacier", "archive", "cold", "deep"] },
+    
+    // AWS Services - Database
+    { id: "rds", type: "service", title: "RDS Databases", description: "Instance sizing, Multi-AZ costs, and storage provisioning", category: "Database", keywords: ["rds", "database", "mysql", "postgres", "sql", "aurora"] },
+    { id: "dynamodb", type: "service", title: "DynamoDB Tables", description: "Capacity mode analysis, global table replication, and DAX caching", category: "Database", keywords: ["dynamodb", "nosql", "table", "dynamo"], badge: "Hot" },
+    { id: "elasticache", type: "service", title: "ElastiCache", description: "Redis/Memcached cluster costs and node optimization", category: "Database", keywords: ["elasticache", "redis", "memcached", "cache"] },
+    { id: "redshift", type: "service", title: "Redshift Clusters", description: "Data warehouse node costs and concurrency scaling", category: "Database", keywords: ["redshift", "warehouse", "analytics", "data"] },
+    
+    // AWS Services - Networking
+    { id: "nat", type: "service", title: "NAT Gateways", description: "Data processing costs and architecture optimization", category: "Networking", keywords: ["nat", "gateway", "network", "vpc", "egress"], badge: "$$" },
+    { id: "elb", type: "service", title: "Load Balancers", description: "ALB/NLB costs, LCU charges, and idle balancer detection", category: "Networking", keywords: ["elb", "alb", "nlb", "load balancer", "lb"] },
+    { id: "cloudfront", type: "service", title: "CloudFront CDN", description: "Distribution costs, price class optimization, and cache efficiency", category: "Networking", keywords: ["cloudfront", "cdn", "distribution", "edge"] },
+    { id: "vpc", type: "service", title: "VPC Resources", description: "VPC endpoints, Transit Gateway attachments, and peering costs", category: "Networking", keywords: ["vpc", "endpoint", "transit", "peering"] },
+    { id: "eip", type: "service", title: "Elastic IPs", description: "Unassociated IP addresses incurring hourly charges", category: "Networking", keywords: ["elastic ip", "eip", "public ip", "address"], badge: "$$" },
+    
+    // Quick Actions
+    { id: "scan-all", type: "action", title: "Start Full Environment Scan", description: "Analyze all AWS resources across all regions", category: "Actions", keywords: ["scan", "analyze", "start", "full", "all"] },
+    { id: "export-csv", type: "action", title: "Export Results to CSV", description: "Download cost analysis as spreadsheet", category: "Actions", keywords: ["export", "csv", "download", "spreadsheet"] },
+    { id: "schedule-scan", type: "action", title: "Schedule Recurring Scan", description: "Set up automated daily/weekly cost analysis", category: "Actions", keywords: ["schedule", "recurring", "automate", "daily", "weekly"] },
+    { id: "compare-months", type: "action", title: "Compare Month-over-Month", description: "View cost trends and changes over time", category: "Actions", keywords: ["compare", "month", "trend", "history"] },
+    
+    // CLI Commands
+    { id: "cli-cost", type: "command", title: "aws ce get-cost-and-usage", description: "Query Cost Explorer API for spending data", category: "CLI Commands", keywords: ["cli", "cost", "explorer", "ce", "usage"] },
+    { id: "cli-ec2", type: "command", title: "aws ec2 describe-instances", description: "List all EC2 instances with details", category: "CLI Commands", keywords: ["cli", "ec2", "describe", "instances", "list"] },
+    { id: "cli-s3", type: "command", title: "aws s3 ls --summarize", description: "List S3 buckets with size summary", category: "CLI Commands", keywords: ["cli", "s3", "list", "buckets", "size"] },
+    { id: "cli-rds", type: "command", title: "aws rds describe-db-instances", description: "List all RDS database instances", category: "CLI Commands", keywords: ["cli", "rds", "describe", "database"] },
+    
+    // Cost Patterns & Insights
+    { id: "pattern-spike", type: "pattern", title: "Cost Spike Detection", description: "Identify sudden increases in daily spending", category: "Patterns", keywords: ["spike", "increase", "sudden", "anomaly", "alert"] },
+    { id: "pattern-unused", type: "pattern", title: "Unused Resource Finder", description: "Detect idle EC2, unattached EBS, unused EIPs", category: "Patterns", keywords: ["unused", "idle", "orphan", "unattached", "waste"] },
+    { id: "pattern-ri", type: "pattern", title: "Reserved Instance Coverage", description: "Analyze RI utilization and purchase recommendations", category: "Patterns", keywords: ["reserved", "ri", "savings", "commitment", "discount"] },
+    { id: "pattern-sp", type: "pattern", title: "Savings Plans Analysis", description: "Compute and EC2 Savings Plans optimization", category: "Patterns", keywords: ["savings plan", "sp", "commitment", "discount", "compute"] },
+    
+    // Documentation
+    { id: "doc-setup", type: "doc", title: "IAM Setup Guide", description: "Create read-only credentials for safe scanning", category: "Documentation", keywords: ["setup", "iam", "credentials", "policy", "permissions"] },
+    { id: "doc-security", type: "doc", title: "Security Best Practices", description: "Keep your AWS credentials safe", category: "Documentation", keywords: ["security", "best practices", "safe", "protect"] },
+    { id: "doc-pricing", type: "doc", title: "AWS Pricing Models", description: "Understanding On-Demand, Reserved, and Spot pricing", category: "Documentation", keywords: ["pricing", "model", "on-demand", "spot", "reserved"] },
+    { id: "doc-api", type: "doc", title: "Dzera API Reference", description: "Programmatic access to Dzera scanning", category: "Documentation", keywords: ["api", "reference", "programmatic", "integrate"] },
+    
+    // AI Insights
+    { id: "insight-optimize", type: "insight", title: "Generate Optimization Report", description: "AI-powered recommendations based on your usage", category: "AI Insights", keywords: ["ai", "optimize", "recommendation", "report", "suggest"], badge: "AI" },
+    { id: "insight-forecast", type: "insight", title: "Cost Forecast", description: "Predict next month's spending based on trends", category: "AI Insights", keywords: ["forecast", "predict", "future", "estimate", "projection"], badge: "AI" },
+    { id: "insight-anomaly", type: "insight", title: "Anomaly Detection", description: "AI-detected unusual spending patterns", category: "AI Insights", keywords: ["anomaly", "unusual", "detect", "ai", "pattern"], badge: "AI" },
+  ], []);
+
+  // Fuzzy search algorithm with scoring
+  const fuzzySearch = useCallback((query: string, items: SearchItem[]): SearchItem[] => {
+    if (!query.trim()) {
+      // Show recent searches or popular items when no query
+      return items.filter(item => item.badge === "Hot" || item.badge === "AI").slice(0, 8);
+    }
+    
+    const searchTerms = query.toLowerCase().split(/\s+/);
+    
+    return items
+      .map(item => {
+        let score = 0;
+        const titleLower = item.title.toLowerCase();
+        const descLower = item.description.toLowerCase();
+        const categoryLower = item.category.toLowerCase();
+        
+        for (const term of searchTerms) {
+          // Exact title match = highest score
+          if (titleLower === term) score += 100;
+          // Title starts with term
+          else if (titleLower.startsWith(term)) score += 50;
+          // Title contains term
+          else if (titleLower.includes(term)) score += 30;
+          // Keyword exact match
+          if (item.keywords.some(k => k === term)) score += 40;
+          // Keyword contains term
+          if (item.keywords.some(k => k.includes(term))) score += 20;
+          // Description contains term
+          if (descLower.includes(term)) score += 10;
+          // Category match
+          if (categoryLower.includes(term)) score += 15;
+        }
+        
+        // Boost items with badges
+        if (item.badge && score > 0) score += 5;
+        
+        return { item, score };
+      })
+      .filter(result => result.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(result => result.item)
+      .slice(0, 12);
+  }, []);
+
+  // Filter search results
+  const filteredSearchResults = useMemo(() => {
+    let results = fuzzySearch(commandSearch, searchItems);
+    if (activeFilter) {
+      results = results.filter(item => item.type === activeFilter);
+    }
+    return results;
+  }, [commandSearch, searchItems, activeFilter, fuzzySearch]);
+
+  // Handle search result selection
+  const handleSearchSelect = useCallback((item: SearchItem) => {
+    // Add to recent searches
+    setRecentSearches(prev => {
+      const newRecent = [item.title, ...prev.filter(s => s !== item.title)].slice(0, 5);
+      return newRecent;
+    });
+    
+    setShowCommandPalette(false);
+    setCommandSearch("");
+    setSelectedIndex(0);
+    
+    // Execute action based on item type
+    switch (item.type) {
+      case "service":
+        handleServiceClick(item.title.replace(/\s+/g, '-'));
+        addLog(`Opening ${item.title} analysis...`, "info");
+        break;
+      case "action":
+        if (item.id === "scan-all") {
+          handleTabClick("credentials.aws");
+          addLog("Navigate to credentials to start full scan", "info");
+        } else {
+          addLog(`Action: ${item.title}`, "info");
+        }
+        break;
+      case "command":
+        navigator.clipboard?.writeText(item.title);
+        addLog(`Copied to clipboard: ${item.title}`, "success");
+        break;
+      case "doc":
+        window.open("/why-dzera", "_self");
+        break;
+      case "pattern":
+      case "insight":
+        handleTabClick("cost-reports.md");
+        addLog(`Loading ${item.title}...`, "info");
+        break;
+    }
+  }, [handleServiceClick, handleTabClick, addLog]);
+
+  // Keyboard navigation in search
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.min(prev + 1, filteredSearchResults.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.max(prev - 1, 0));
+    } else if (e.key === "Enter" && filteredSearchResults[selectedIndex]) {
+      e.preventDefault();
+      handleSearchSelect(filteredSearchResults[selectedIndex]);
+    }
+  }, [filteredSearchResults, selectedIndex, handleSearchSelect]);
+
+  // Reset selection when search changes
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [commandSearch]);
 
   const handleVerify = async () => {
     if (!credentials.accessKeyId || !credentials.secretAccessKey) {
@@ -466,10 +678,10 @@ export default function Home() {
               </div>
 
               <div className="group relative">
-                <div onClick={() => handleTabClick("search")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="search" size="md" active={activeTab === "search"} />
+                <div onClick={() => setShowCommandPalette(true)} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
+                  <ThemedIcon variant="search" size="md" active={showCommandPalette} />
                 </div>
-                <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Search</div>
+                <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Search (⌘K)</div>
               </div>
 
               <div className="mt-auto flex flex-col gap-4 mb-2">
@@ -975,6 +1187,189 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Command Palette Modal */}
+        {showCommandPalette && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" onClick={() => setShowCommandPalette(false)}>
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            
+            {/* Modal */}
+            <div 
+              className="relative w-full max-w-2xl bg-[#0d1117] border border-[#30363d] rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Search Header */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-[#30363d]">
+                <ThemedIcon variant="search" size="md" active />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={commandSearch}
+                  onChange={(e) => setCommandSearch(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  placeholder="Search services, actions, commands, or documentation..."
+                  className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 outline-none"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                  <kbd className="px-1.5 py-0.5 bg-[#161b22] border border-[#30363d] rounded text-gray-400">ESC</kbd>
+                  <span>to close</span>
+                </div>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="flex items-center gap-1 px-4 py-2 border-b border-[#30363d]/50 bg-[#161b22]/50">
+                <button
+                  onClick={() => setActiveFilter(null)}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+                    activeFilter === null ? "bg-[#FF9900] text-black" : "text-gray-400 hover:text-white hover:bg-[#30363d]"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setActiveFilter("service")}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+                    activeFilter === "service" ? "bg-[#FF9900] text-black" : "text-gray-400 hover:text-white hover:bg-[#30363d]"
+                  }`}
+                >
+                  Services
+                </button>
+                <button
+                  onClick={() => setActiveFilter("action")}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+                    activeFilter === "action" ? "bg-[#FF9900] text-black" : "text-gray-400 hover:text-white hover:bg-[#30363d]"
+                  }`}
+                >
+                  Actions
+                </button>
+                <button
+                  onClick={() => setActiveFilter("command")}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+                    activeFilter === "command" ? "bg-[#FF9900] text-black" : "text-gray-400 hover:text-white hover:bg-[#30363d]"
+                  }`}
+                >
+                  CLI
+                </button>
+                <button
+                  onClick={() => setActiveFilter("pattern")}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+                    activeFilter === "pattern" ? "bg-[#FF9900] text-black" : "text-gray-400 hover:text-white hover:bg-[#30363d]"
+                  }`}
+                >
+                  Patterns
+                </button>
+                <button
+                  onClick={() => setActiveFilter("insight")}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+                    activeFilter === "insight" ? "bg-[#FF9900] text-black" : "text-gray-400 hover:text-white hover:bg-[#30363d]"
+                  }`}
+                >
+                  AI
+                </button>
+                <button
+                  onClick={() => setActiveFilter("doc")}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+                    activeFilter === "doc" ? "bg-[#FF9900] text-black" : "text-gray-400 hover:text-white hover:bg-[#30363d]"
+                  }`}
+                >
+                  Docs
+                </button>
+              </div>
+
+              {/* Results */}
+              <div className="max-h-[400px] overflow-y-auto">
+                {filteredSearchResults.length > 0 ? (
+                  <div className="py-2">
+                    {filteredSearchResults.map((item, index) => (
+                      <div
+                        key={item.id}
+                        onClick={() => handleSearchSelect(item)}
+                        className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${
+                          index === selectedIndex ? "bg-[#FF9900]/10 border-l-2 border-[#FF9900]" : "hover:bg-[#161b22]"
+                        }`}
+                      >
+                        {/* Type Icon */}
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          item.type === "service" ? "bg-blue-500/20" :
+                          item.type === "action" ? "bg-green-500/20" :
+                          item.type === "command" ? "bg-purple-500/20" :
+                          item.type === "pattern" ? "bg-orange-500/20" :
+                          item.type === "insight" ? "bg-pink-500/20" :
+                          "bg-gray-500/20"
+                        }`}>
+                          {item.type === "service" && <ThemedIcon variant="cloud" size="sm" active />}
+                          {item.type === "action" && <ThemedIcon variant="d" size="sm" active />}
+                          {item.type === "command" && <ThemedIcon variant="terminal" size="sm" active />}
+                          {item.type === "pattern" && <ThemedIcon variant="chart" size="sm" active />}
+                          {item.type === "insight" && <ThemedIcon variant="d" size="sm" active />}
+                          {item.type === "doc" && <ThemedIcon variant="book" size="sm" active />}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-medium ${index === selectedIndex ? "text-[#FF9900]" : "text-white"}`}>
+                              {item.title}
+                            </span>
+                            {item.badge && (
+                              <span className={`px-1.5 py-0.5 text-[9px] font-bold uppercase rounded ${
+                                item.badge === "Hot" ? "bg-red-500/20 text-red-400" :
+                                item.badge === "AI" ? "bg-purple-500/20 text-purple-400" :
+                                item.badge === "$$" ? "bg-yellow-500/20 text-yellow-400" :
+                                "bg-gray-500/20 text-gray-400"
+                              }`}>
+                                {item.badge}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                        </div>
+
+                        {/* Category & Shortcut */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-[10px] text-gray-600 uppercase tracking-wider">{item.category}</span>
+                          {index === selectedIndex && (
+                            <kbd className="px-1.5 py-0.5 bg-[#161b22] border border-[#30363d] rounded text-[10px] text-gray-400">
+                              <CornerDownLeft className="w-3 h-3 inline" />
+                            </kbd>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-12 text-center">
+                    <ThemedIcon variant="search" size="lg" />
+                    <p className="mt-3 text-sm text-gray-400">No results found for &quot;{commandSearch}&quot;</p>
+                    <p className="text-xs text-gray-600 mt-1">Try searching for EC2, S3, Lambda, or &quot;cost spike&quot;</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between px-4 py-2.5 border-t border-[#30363d] bg-[#161b22]/50">
+                <div className="flex items-center gap-4 text-[10px] text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <ArrowUp className="w-3 h-3" /><ArrowDown className="w-3 h-3" /> Navigate
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CornerDownLeft className="w-3 h-3" /> Select
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Command className="w-3 h-3" />K Open
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DLogo size="xs" active />
+                  <span className="text-[10px] text-gray-500">Powered by Dzera Intelligence</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
