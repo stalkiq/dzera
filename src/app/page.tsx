@@ -28,126 +28,156 @@ type ScanResult = {
 };
 
 // Service descriptions for optimization pages
-const serviceDescriptions: Record<string, { desc: string; scans: string[] }> = {
+const serviceDescriptions: Record<string, { desc: string; details: string; scans: string[] }> = {
   "ec2": {
-    desc: "Elastic Compute Cloud provides scalable virtual servers in the AWS cloud.",
-    scans: ["Running instances and their hourly costs", "Instance type and sizing efficiency", "Reserved Instance coverage gaps", "Idle or underutilized instances"]
+    desc: "Elastic Compute Cloud - Virtual servers in the cloud.",
+    details: "EC2 provides resizable compute capacity with complete control over your computing resources. Launch instances with various CPU, memory, storage, and networking configurations. You pay by the hour or second (minimum 60 seconds) depending on instance type. EC2 is ideal for applications requiring full OS control, custom software stacks, or specific hardware configurations. Costs are driven by instance type, running hours, storage (EBS), data transfer, and optional features like Elastic IPs and load balancers.",
+    scans: ["Running instances and their hourly costs", "Instance type and sizing efficiency", "Reserved Instance coverage gaps", "Idle or underutilized instances", "Stopped instances with attached EBS volumes"]
   },
   "lightsail": {
-    desc: "Simplified virtual private servers for straightforward workloads.",
-    scans: ["Active instances and bundles", "Snapshot storage costs", "Static IP allocations", "Load balancer configurations"]
+    desc: "Simplified VPS hosting with predictable pricing.",
+    details: "Lightsail offers virtual private servers with pre-configured environments at fixed monthly prices. Each bundle includes compute, SSD storage, and data transfer allowances. It's the easiest way to launch websites, blogs, dev environments, or small applications. Lightsail is significantly cheaper than EC2 for simple workloads but lacks advanced networking and scaling features. Common cost drivers include running instances 24/7, snapshot storage, static IPs, and load balancers.",
+    scans: ["Active instances and bundles", "Snapshot storage costs", "Static IP allocations", "Load balancer configurations", "Unused or idle instances"]
   },
   "lambda": {
-    desc: "Serverless compute service that runs code in response to events.",
-    scans: ["Function invocation frequency", "Memory allocation efficiency", "Provisioned concurrency costs", "Duration and timeout optimization"]
+    desc: "Serverless compute that runs code without provisioning servers.",
+    details: "Lambda executes code in response to events like API calls, file uploads, database changes, or schedules. You pay only for compute time consumed (billed in 1ms increments) with no charge when code isn't running. Functions auto-scale from zero to thousands of concurrent executions. Lambda is ideal for event-driven architectures, APIs, and data processing. Cost optimization focuses on memory allocation (affects CPU), execution duration, and avoiding over-provisioned concurrency.",
+    scans: ["Function invocation frequency and costs", "Memory allocation vs actual usage", "Provisioned concurrency charges", "Duration and timeout optimization", "Cold start patterns"]
   },
   "s3": {
-    desc: "Object storage service offering industry-leading scalability and durability.",
-    scans: ["Bucket storage classes", "Lifecycle policy effectiveness", "Versioning overhead", "Cross-region replication costs"]
+    desc: "Scalable object storage with 99.999999999% durability.",
+    details: "S3 stores unlimited objects up to 5TB each across multiple storage classes optimized for different access patterns. Standard for frequent access, Intelligent-Tiering for unknown patterns, Glacier for archives. You pay for storage volume, requests (PUT/GET), and data transfer out. Key cost factors include choosing the right storage class, implementing lifecycle policies to transition old data, managing versioning overhead, and optimizing transfer acceleration usage.",
+    scans: ["Bucket storage classes and volumes", "Lifecycle policy effectiveness", "Versioning overhead analysis", "Cross-region replication costs", "Incomplete multipart uploads"]
   },
   "rds": {
-    desc: "Managed relational database service supporting multiple database engines.",
-    scans: ["Instance sizing and utilization", "Multi-AZ deployment costs", "Storage provisioning", "Backup retention periods"]
+    desc: "Managed relational databases for MySQL, PostgreSQL, SQL Server, Oracle, MariaDB.",
+    details: "RDS handles database administration tasks like backups, patching, and failover while you focus on your application. Choose from multiple database engines and instance types. Multi-AZ deployments provide high availability with automatic failover. Read replicas scale read-heavy workloads. Costs are driven by instance hours, storage (provisioned or autoscaling), I/O requests, backup retention beyond free tier, and data transfer. Reserved Instances offer up to 69% savings.",
+    scans: ["Instance sizing vs actual utilization", "Multi-AZ deployment necessity", "Storage provisioning efficiency", "Backup retention and snapshot costs", "Read replica optimization"]
   },
   "aurora": {
-    desc: "MySQL and PostgreSQL-compatible relational database with enhanced performance.",
-    scans: ["Cluster configurations", "Read replica counts", "Serverless capacity units", "Storage I/O patterns"]
+    desc: "MySQL/PostgreSQL-compatible with 5x performance improvement.",
+    details: "Aurora is AWS's cloud-native relational database with automatic storage scaling up to 128TB, 15 read replicas with sub-10ms lag, and continuous backup to S3. Aurora Serverless v2 scales compute automatically based on demand. Costs include instance hours, storage ($0.10/GB-month), I/O requests ($0.20 per million), and backup storage beyond cluster volume. Aurora typically costs more than RDS but offers better performance, availability, and operational simplicity.",
+    scans: ["Cluster configurations and costs", "Read replica count optimization", "Serverless capacity unit usage", "Storage I/O patterns", "Backup storage beyond free tier"]
   },
   "dynamodb": {
-    desc: "Fully managed NoSQL database service with single-digit millisecond latency.",
-    scans: ["Provisioned capacity utilization", "On-demand pricing efficiency", "Global table replication", "Backup and restore costs"]
+    desc: "Serverless NoSQL with single-digit millisecond latency at any scale.",
+    details: "DynamoDB is a fully managed key-value and document database handling millions of requests per second. Choose provisioned capacity (predictable costs) or on-demand (pay-per-request). Global Tables replicate data across regions for low-latency global access. Costs come from read/write capacity units (or requests), storage, streams, backups, and global table replication. On-demand is 6-7x more expensive per request but ideal for unpredictable workloads.",
+    scans: ["Provisioned vs on-demand efficiency", "Read/write capacity utilization", "Global table replication costs", "Backup and PITR charges", "TTL optimization opportunities"]
   },
   "cloudfront": {
-    desc: "Content delivery network for fast, secure delivery of data and applications.",
-    scans: ["Distribution traffic patterns", "Cache hit ratios", "Origin request frequency", "Price class configurations"]
+    desc: "Global CDN with 400+ edge locations for low-latency content delivery.",
+    details: "CloudFront caches content at edge locations worldwide, reducing latency and offloading origin servers. It integrates natively with S3, EC2, ALB, and Lambda@Edge for dynamic content processing. Pricing varies by region (Price Classes let you limit regions), data transfer out, requests, and optional features like field-level encryption. Optimizing cache hit ratios directly reduces origin requests and costs. Origin Shield adds another caching layer for frequently accessed content.",
+    scans: ["Distribution traffic and costs", "Cache hit ratio analysis", "Origin request frequency", "Price class optimization", "Lambda@Edge invocation costs"]
   },
   "nat-gateway": {
-    desc: "Managed network address translation service for outbound internet connectivity.",
-    scans: ["Gateway hourly charges", "Data processing volumes", "Multi-AZ redundancy costs", "Alternative architecture options"]
+    desc: "Managed NAT enabling private subnet internet access.",
+    details: "NAT Gateway allows instances in private subnets to connect to the internet while preventing inbound connections. It's a significant cost driver: $0.045/hour (~$32/month) plus $0.045/GB processed. Multi-AZ deployments multiply these costs. Alternatives include NAT instances (cheaper but self-managed), VPC endpoints for AWS services (free for S3/DynamoDB gateway endpoints), and IPv6 (no NAT needed). Review whether all traffic truly needs NAT.",
+    scans: ["Gateway hourly charges", "Data processing volumes", "Multi-AZ redundancy costs", "VPC endpoint alternatives", "Traffic pattern analysis"]
   },
   "elastic-ip": {
-    desc: "Static IPv4 addresses designed for dynamic cloud computing.",
-    scans: ["Unassociated IP charges", "IP address inventory", "Association patterns", "Release recommendations"]
+    desc: "Static public IPv4 addresses for dynamic cloud resources.",
+    details: "Elastic IPs provide static public IP addresses that you can rapidly remap between instances. They're free when associated with a running instance but cost $0.005/hour (~$3.60/month) when idle or associated with stopped instances. With IPv4 exhaustion, AWS now charges for all public IPv4 addresses. Audit regularly for orphaned IPs from terminated instances or unused allocations.",
+    scans: ["Unassociated IP charges", "IP address inventory", "Association with stopped instances", "IPv6 migration opportunities", "Release recommendations"]
   },
   "vpc": {
-    desc: "Virtual Private Cloud enables isolated network environments within AWS.",
-    scans: ["NAT Gateway deployments", "VPC endpoint configurations", "Transit Gateway attachments", "Data transfer paths"]
+    desc: "Isolated virtual network with complete control over IP addressing, routing, and security.",
+    details: "VPC itself is free, but associated resources drive costs: NAT Gateways, VPC endpoints (interface endpoints cost $0.01/hour), Transit Gateway attachments ($0.05/hour), VPN connections, and data transfer between AZs ($0.01/GB). Peering is free but data transfer applies. Optimize by using Gateway endpoints (free) for S3/DynamoDB, consolidating NAT Gateways, and minimizing cross-AZ traffic through proper service placement.",
+    scans: ["NAT Gateway deployments", "VPC endpoint configurations", "Transit Gateway attachments", "Cross-AZ data transfer", "Peering connection patterns"]
   },
   "api-gateway": {
-    desc: "Fully managed service for creating, publishing, and maintaining APIs.",
-    scans: ["Request volume and pricing tier", "Cache configurations", "WebSocket connection costs", "REST vs HTTP API efficiency"]
+    desc: "Fully managed API service handling authentication, throttling, and caching.",
+    details: "API Gateway creates, publishes, and manages REST, HTTP, and WebSocket APIs at any scale. REST APIs offer more features but cost $3.50/million requests. HTTP APIs are simpler and 71% cheaper at $1.00/million. WebSocket APIs charge per message and connection minutes. Caching reduces backend calls but adds hourly charges. Consider HTTP APIs for simple proxies, REST for complex transformations, and direct Lambda URLs for internal services.",
+    scans: ["Request volume and pricing tier", "REST vs HTTP API efficiency", "Cache utilization analysis", "WebSocket connection costs", "Authorization overhead"]
   },
   "ecs": {
-    desc: "Container orchestration service for Docker containers.",
-    scans: ["Task and service configurations", "Fargate vs EC2 launch types", "Container resource allocation", "Auto-scaling policies"]
+    desc: "Container orchestration running Docker containers on AWS infrastructure.",
+    details: "ECS manages container deployment, scaling, and networking. With EC2 launch type, you manage and pay for the underlying instances. Fargate launch type is serverless—pay for vCPU and memory per second with no cluster management. ECS itself is free; you pay for compute (EC2 or Fargate), load balancers, and data transfer. Fargate is simpler but typically 13-33% more expensive than well-utilized EC2. Spot Fargate offers up to 70% savings for fault-tolerant workloads.",
+    scans: ["Task and service configurations", "Fargate vs EC2 cost comparison", "Container resource allocation", "Auto-scaling efficiency", "Spot capacity utilization"]
   },
   "eks": {
-    desc: "Managed Kubernetes service for running containerized applications.",
-    scans: ["Cluster management fees", "Node group configurations", "Fargate profile costs", "Add-on service charges"]
+    desc: "Managed Kubernetes with automatic upgrades and high availability.",
+    details: "EKS runs Kubernetes control plane across multiple AZs with automatic upgrades and patching. You pay $0.10/hour per cluster (~$72/month) plus compute costs (EC2 or Fargate). Additional charges for EKS add-ons, load balancers, and data transfer. Unlike ECS, EKS has a per-cluster fee regardless of workload. Consider consolidating small workloads into fewer clusters and using Karpenter for efficient node provisioning.",
+    scans: ["Cluster management fees", "Node group configurations", "Fargate profile costs", "Add-on service charges", "Cluster consolidation opportunities"]
   },
   "sagemaker": {
-    desc: "Machine learning platform for building, training, and deploying models.",
-    scans: ["Notebook instance hours", "Training job costs", "Endpoint hosting charges", "Storage and data transfer"]
+    desc: "End-to-end ML platform for building, training, and deploying models.",
+    details: "SageMaker provides Jupyter notebooks, built-in algorithms, training infrastructure, and hosting endpoints. Costs accumulate quickly from: notebook instances (running 24/7), training jobs (instance hours), endpoints (always-on inference), and storage. Serverless inference and multi-model endpoints reduce costs for variable workloads. Real-time endpoints cost significantly more than batch transform for infrequent predictions. Stop notebooks when not in use.",
+    scans: ["Notebook instance hours", "Training job optimization", "Endpoint hosting efficiency", "Storage and data transfer", "Serverless vs provisioned inference"]
   },
   "bedrock": {
-    desc: "Generative AI service providing foundation models via API.",
-    scans: ["Model invocation costs", "Token consumption patterns", "Provisioned throughput", "Custom model training"]
+    desc: "Generative AI service with foundation models from leading providers.",
+    details: "Bedrock provides API access to foundation models from Anthropic, AI21, Stability AI, Meta, and Amazon without managing infrastructure. Pricing is per-token for on-demand or per-hour for Provisioned Throughput. Claude models: ~$8-15/million input tokens. Fine-tuning adds storage and training costs. Provisioned Throughput guarantees capacity but requires commitment. For cost optimization, choose appropriate model sizes, implement prompt caching, and batch requests where possible.",
+    scans: ["Model invocation costs", "Token consumption patterns", "Provisioned Throughput utilization", "Model selection optimization", "Prompt efficiency analysis"]
   },
   "cloudwatch": {
-    desc: "Monitoring and observability service for AWS resources and applications.",
-    scans: ["Custom metric charges", "Log ingestion and storage", "Dashboard widget costs", "Alarm configuration fees"]
+    desc: "Monitoring service for metrics, logs, alarms, and dashboards.",
+    details: "CloudWatch collects metrics and logs from AWS resources and applications. Basic monitoring is free; detailed monitoring costs $0.30/metric/month. Log ingestion: $0.50/GB, storage: $0.03/GB/month. Custom metrics: $0.30/metric/month. Dashboards: $3/month each. Alarms: $0.10/alarm/month. Costs grow quickly with high-volume logging and custom metrics. Use metric filters instead of high-cardinality custom metrics, set log retention periods, and consolidate dashboards.",
+    scans: ["Custom metric charges", "Log ingestion and storage", "Dashboard widget costs", "Alarm configuration fees", "Log retention optimization"]
   },
   "iam": {
-    desc: "Identity and Access Management controls access to AWS services securely.",
-    scans: ["Policy complexity analysis", "Role trust relationships", "Access key rotation status", "Permission boundaries"]
+    desc: "Identity and Access Management controlling who can access what.",
+    details: "IAM is free but critical for security and cost governance. Users, groups, roles, and policies control access to AWS services. Misconfigured IAM can lead to security breaches or over-provisioned access causing unexpected costs. Best practices: principle of least privilege, regular access reviews, use roles instead of long-term credentials, enable MFA, and implement service control policies for organization-wide guardrails.",
+    scans: ["Policy complexity analysis", "Role trust relationships", "Access key rotation status", "Unused credentials", "Cross-account access patterns"]
   },
   "kms": {
-    desc: "Key Management Service for creating and managing encryption keys.",
-    scans: ["Customer managed key costs", "API request charges", "Key rotation configurations", "Cross-account usage"]
+    desc: "Encryption key management with hardware security module backing.",
+    details: "KMS creates and manages encryption keys used across AWS services. AWS managed keys are free; customer managed keys cost $1/month plus $0.03 per 10,000 API calls. Automatic key rotation is included. High-volume encryption operations (envelope encryption) can drive API costs. Optimize by caching data keys, using envelope encryption efficiently, and auditing key usage. Consider AWS-owned keys for services where customer-managed keys aren't required.",
+    scans: ["Customer managed key costs", "API request charges", "Key rotation configurations", "Cross-account key usage", "Key policy audit"]
   },
   "sns": {
-    desc: "Simple Notification Service for pub/sub messaging and mobile notifications.",
-    scans: ["Message delivery costs", "SMS pricing tiers", "Topic subscription counts", "Delivery retry configurations"]
+    desc: "Pub/sub messaging for decoupling microservices and sending notifications.",
+    details: "SNS fans out messages to multiple subscribers including SQS, Lambda, HTTP endpoints, email, and SMS. Publishing is nearly free ($0.50/million). Delivery costs vary: Lambda/SQS free, HTTP $0.60/million, SMS varies by country ($0.00645-$0.0645/message US). Mobile push is $0.50/million. High-volume SMS notifications or international messaging can be expensive. Consider SQS for point-to-point, EventBridge for event routing, or Pinpoint for marketing messages.",
+    scans: ["Message delivery costs", "SMS pricing by destination", "Topic subscription optimization", "Delivery retry configuration", "Alternative service evaluation"]
   },
   "sqs": {
-    desc: "Simple Queue Service for decoupling and scaling microservices.",
-    scans: ["Request pricing analysis", "FIFO queue costs", "Message retention periods", "Dead-letter queue usage"]
+    desc: "Fully managed message queuing for decoupling distributed systems.",
+    details: "SQS enables asynchronous communication between services with automatic scaling and high durability. Standard queues: $0.40/million requests (first 1M free). FIFO queues: $0.50/million (plus $0.05/million for deduplication). Long polling reduces empty receives. Message retention up to 14 days. Batch operations (up to 10 messages) reduce costs. Dead-letter queues capture failed messages. Consider combining with SNS for fan-out patterns.",
+    scans: ["Request pricing analysis", "FIFO vs Standard efficiency", "Message retention periods", "Dead-letter queue usage", "Batch operation optimization"]
   },
   "elasticache": {
-    desc: "In-memory caching service supporting Redis and Memcached.",
-    scans: ["Node type efficiency", "Cluster mode configurations", "Reserved node coverage", "Data tiering options"]
+    desc: "Managed Redis and Memcached for microsecond-latency caching.",
+    details: "ElastiCache runs in-memory data stores for caching, session management, and real-time analytics. You pay for node hours based on instance type. Reserved nodes offer up to 55% savings. Redis offers persistence, replication, and cluster mode; Memcached is simpler for basic caching. Data tiering (Redis) moves less-accessed data to SSD, reducing costs. Serverless ElastiCache provides pay-per-use pricing without capacity planning.",
+    scans: ["Node type efficiency", "Cluster mode configurations", "Reserved node coverage", "Data tiering opportunities", "Memory utilization analysis"]
   },
   "redshift": {
-    desc: "Cloud data warehouse for analytics at scale.",
-    scans: ["Cluster node hours", "Concurrency scaling costs", "Spectrum query charges", "Reserved instance gaps"]
+    desc: "Petabyte-scale data warehouse with columnar storage and MPP.",
+    details: "Redshift runs complex analytical queries across petabytes using massively parallel processing. RA3 nodes separate compute and storage, scaling independently. Serverless automatically provisions capacity. Costs include node hours, managed storage ($0.024/GB), Spectrum queries against S3 ($5/TB scanned), and concurrency scaling (on-demand pricing per second). Reserved instances provide up to 75% savings for steady workloads.",
+    scans: ["Cluster node utilization", "Concurrency scaling costs", "Spectrum query optimization", "Reserved instance coverage", "Workload management analysis"]
   },
   "athena": {
-    desc: "Interactive query service for analyzing data in S3 using SQL.",
-    scans: ["Data scanned per query", "Workgroup configurations", "Query result caching", "Partition optimization"]
+    desc: "Serverless SQL queries on S3 data without infrastructure management.",
+    details: "Athena queries data directly in S3 using standard SQL, charging $5/TB scanned. No infrastructure to manage—queries run on-demand. Optimization is critical: use columnar formats (Parquet, ORC) for 30-90% cost reduction, partition data by common query patterns, compress files, and use workgroups to set data scan limits. Query result caching reuses results for identical queries. Federated queries extend to other data sources.",
+    scans: ["Data scanned per query", "Columnar format adoption", "Partition strategy effectiveness", "Workgroup configurations", "Query result caching"]
   },
   "glue": {
-    desc: "Serverless data integration service for ETL workloads.",
-    scans: ["DPU hour consumption", "Crawler run frequency", "Job bookmark efficiency", "Development endpoint costs"]
+    desc: "Serverless ETL service with built-in data catalog.",
+    details: "Glue handles extract-transform-load workloads with automatic code generation, job scheduling, and a central data catalog. You pay for DPU-hours: $0.44/DPU-hour for ETL jobs, crawlers billed per DPU-second. Development endpoints cost while running. Cost optimization: use auto-scaling, appropriate worker types (G.1X vs G.2X), bookmark jobs to process only new data, limit crawler scope, and consider Glue Studio for visual ETL. Data Catalog charges for API calls and storage.",
+    scans: ["DPU hour consumption", "Crawler run frequency", "Job bookmark efficiency", "Worker type optimization", "Development endpoint costs"]
   },
   "kinesis": {
-    desc: "Real-time data streaming service for analytics and application integration.",
-    scans: ["Shard hour charges", "Enhanced fan-out costs", "Data retention periods", "Consumer application efficiency"]
+    desc: "Real-time data streaming at any scale.",
+    details: "Kinesis ingests and processes real-time streaming data from thousands of sources simultaneously. Data Streams charges per shard-hour ($0.015) plus PUT payload units. Firehose charges per GB ingested with no shard management. Data Analytics runs SQL on streams ($0.11/KPU-hour). Enhanced fan-out ($0.015/consumer-shard-hour) enables multiple consumers reading at full speed. Optimize by right-sizing shards to utilization, using Firehose for simple delivery, and batching producers.",
+    scans: ["Shard hour charges", "Enhanced fan-out costs", "Data retention periods", "Consumer application efficiency", "Producer batching optimization"]
   },
   "cost-explorer": {
-    desc: "AWS cost visualization and analysis tool.",
-    scans: ["API request charges", "Savings Plans recommendations", "Reserved Instance analysis", "Anomaly detection"]
+    desc: "Visualize, understand, and manage AWS costs and usage.",
+    details: "Cost Explorer provides default reports for cost analysis with filtering by service, account, tag, and more. Free tier includes the UI console. API access costs $0.01 per request (can add up with automation). Rightsizing recommendations for EC2, Savings Plans recommendations, and anomaly detection (extra charges). Enable hourly granularity only when needed. For programmatic access, cache responses to reduce API calls.",
+    scans: ["API request charges", "Savings Plans recommendations", "Reserved Instance analysis", "Anomaly detection alerts", "Rightsizing recommendations"]
   },
   "budgets": {
-    desc: "Custom budgets for tracking AWS costs and usage.",
-    scans: ["Budget action configurations", "Alert threshold settings", "Forecasting accuracy", "Cost allocation tags"]
+    desc: "Set custom budgets and receive alerts when thresholds are exceeded.",
+    details: "AWS Budgets tracks costs and usage against defined thresholds. First two budgets are free; additional budgets cost $0.02/day each (~$0.62/month). Budget Actions can automatically apply policies when thresholds are breached (e.g., stop EC2 instances, apply SCPs). Configure multiple alert thresholds (e.g., 50%, 80%, 100%) for early warning. Combine with cost allocation tags for granular department or project budgets.",
+    scans: ["Budget action configurations", "Alert threshold settings", "Forecasting accuracy", "Cost allocation tags", "Action automation setup"]
   },
   "savings-plans": {
-    desc: "Flexible pricing model offering lower prices in exchange for commitment.",
-    scans: ["Commitment utilization rates", "Coverage recommendations", "Compute vs EC2 plans", "Expiration tracking"]
+    desc: "Save up to 72% on compute with flexible hourly commitment.",
+    details: "Savings Plans provide discounted rates in exchange for committing to consistent compute usage ($/hour) for 1 or 3 years. Compute Savings Plans apply to EC2, Fargate, and Lambda across any region, instance family, or OS—maximum flexibility. EC2 Instance Savings Plans are cheaper but locked to a specific instance family and region. Plans apply automatically to eligible usage. Monitor utilization to ensure you're using your commitment; unused commitment is lost.",
+    scans: ["Commitment utilization rates", "Coverage recommendations", "Compute vs EC2 plan comparison", "Expiration tracking", "Underutilization analysis"]
   },
   "reserved-instances": {
-    desc: "Capacity reservations with significant discounts for committed usage.",
-    scans: ["Utilization percentages", "Modification opportunities", "Marketplace listings", "Convertible exchange options"]
+    desc: "Reserve capacity for 1-3 years with up to 75% discount.",
+    details: "Reserved Instances (RIs) provide capacity reservation and billing discount for EC2, RDS, ElastiCache, OpenSearch, and Redshift. Standard RIs offer larger discounts but limited flexibility. Convertible RIs can exchange for different configurations. Partial upfront balances cost vs. cash flow. RIs apply to matching usage automatically. Unused RIs can be sold on the Reserved Instance Marketplace. New workloads often benefit more from Savings Plans' flexibility.",
+    scans: ["Utilization percentages", "Modification opportunities", "Marketplace listing potential", "Convertible exchange options", "Expiration planning"]
   }
 };
 
@@ -624,6 +654,7 @@ export default function Home() {
     const serviceKey = tabId.replace('.md', '').toLowerCase();
     return serviceDescriptions[serviceKey] || {
       desc: "AWS service providing cloud infrastructure capabilities.",
+      details: "This AWS service provides various cloud computing capabilities. Dzera analyzes resource utilization, pricing models, and configuration settings to identify cost optimization opportunities. Review the analysis scope below to understand what parameters are evaluated for this service.",
       scans: ["Resource utilization analysis", "Cost allocation review", "Configuration optimization", "Pricing model recommendations"]
     };
   };
@@ -1141,6 +1172,17 @@ export default function Home() {
                               </h2>
                             </div>
                             <p className="text-gray-400 text-sm">{serviceInfo.desc}</p>
+                          </div>
+
+                          {/* Service Overview - Detailed Description */}
+                          <div className="bg-gradient-to-r from-[#161b22] to-[#1c2128] border border-[#30363d] rounded-xl p-6">
+                            <h3 className="font-bold text-white flex items-center gap-2 mb-3">
+                              <DLogo size="sm" active />
+                              Service Overview
+                            </h3>
+                            <p className="text-sm text-gray-300 leading-relaxed">
+                              {serviceInfo.details || serviceInfo.desc}
+                            </p>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
