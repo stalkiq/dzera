@@ -1,0 +1,78 @@
+{
+ "Description": "SSL Certificate for AWS Dzera (us-east-1)",
+ "Resources": {
+  "CloudFrontCertificateA27ED7B2": {
+   "Type": "AWS::CertificateManager::Certificate",
+   "Properties": {
+    "DomainName": "awsdzera.com",
+    "DomainValidationOptions": [
+     {
+      "DomainName": "awsdzera.com",
+      "HostedZoneId": "Z08044233D57HG5V8IO68"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "CertificateStack/CloudFrontCertificate"
+     }
+    ],
+    "ValidationMethod": "DNS"
+   },
+   "Metadata": {
+    "aws:cdk:path": "CertificateStack/CloudFrontCertificate/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/03IQQ6CQAxA0bOwnyk4JnIADmCCBzC1FFKQwUw7siDcnRgXuvp5P0A4X6AqcFVP3eSf8oDtZkiTa1mXnIgdrnonTia9EBrPGHHgBFvze67p4x/3j6/ZXtl2F5eOYdTyHQKcaqiKUUV8ytFkZmi/PQCsdo3HiAAAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "CertificateStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "CertificateArn": {
+   "Description": "SSL Certificate ARN for CloudFront",
+   "Value": {
+    "Ref": "CloudFrontCertificateA27ED7B2"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

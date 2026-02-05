@@ -1,0 +1,935 @@
+{
+ "Description": "AWS Dzera - Cost Optimization Tool",
+ "Resources": {
+  "HostedZoneDB99F866": {
+   "Type": "AWS::Route53::HostedZone",
+   "Properties": {
+    "Name": "awsdzera.com."
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/HostedZone/Resource"
+   }
+  },
+  "CredentialsKeyA24B74BF": {
+   "Type": "AWS::KMS::Key",
+   "Properties": {
+    "Description": "KMS key for encrypting AWS credentials in transit",
+    "EnableKeyRotation": true,
+    "KeyPolicy": {
+     "Statement": [
+      {
+       "Action": "kms:*",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "arn:aws:iam::016442247702:root"
+       },
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/CredentialsKey/Resource"
+   }
+  },
+  "FrontendBucketEFE2E19C": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketName": "aws-dzera-frontend-016442247702-us-west-2",
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     }
+    ],
+    "WebsiteConfiguration": {
+     "ErrorDocument": "index.html",
+     "IndexDocument": "index.html"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/FrontendBucket/Resource"
+   }
+  },
+  "FrontendBucketPolicy1DFF75D9": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "FrontendBucketEFE2E19C"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:PutBucketPolicy"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "FrontendBucketEFE2E19C",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "FrontendBucketEFE2E19C",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "CanonicalUser": {
+         "Fn::GetAtt": [
+          "OriginAccessIdentityDF1E3CAC",
+          "S3CanonicalUserId"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "FrontendBucketEFE2E19C",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "FrontendBucketEFE2E19C",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "s3:GetObject",
+       "Effect": "Allow",
+       "Principal": {
+        "CanonicalUser": {
+         "Fn::GetAtt": [
+          "OriginAccessIdentityDF1E3CAC",
+          "S3CanonicalUserId"
+         ]
+        }
+       },
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          {
+           "Fn::GetAtt": [
+            "FrontendBucketEFE2E19C",
+            "Arn"
+           ]
+          },
+          "/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/FrontendBucket/Policy/Resource"
+   }
+  },
+  "FrontendBucketAutoDeleteObjectsCustomResourceDB860B32": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "FrontendBucketEFE2E19C"
+    }
+   },
+   "DependsOn": [
+    "FrontendBucketPolicy1DFF75D9"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/FrontendBucket/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-016442247702-us-west-2",
+     "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "FrontendBucketEFE2E19C"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+    "aws:asset:property": "Code"
+   }
+  },
+  "OriginAccessIdentityDF1E3CAC": {
+   "Type": "AWS::CloudFront::CloudFrontOriginAccessIdentity",
+   "Properties": {
+    "CloudFrontOriginAccessIdentityConfig": {
+     "Comment": "OAI for AWS Dzera frontend"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/OriginAccessIdentity/Resource"
+   }
+  },
+  "Distribution830FAC52": {
+   "Type": "AWS::CloudFront::Distribution",
+   "Properties": {
+    "DistributionConfig": {
+     "Aliases": [
+      "awsdzera.com"
+     ],
+     "CustomErrorResponses": [
+      {
+       "ErrorCode": 404,
+       "ResponseCode": 200,
+       "ResponsePagePath": "/index.html"
+      },
+      {
+       "ErrorCode": 403,
+       "ResponseCode": 200,
+       "ResponsePagePath": "/index.html"
+      }
+     ],
+     "DefaultCacheBehavior": {
+      "AllowedMethods": [
+       "GET",
+       "HEAD",
+       "OPTIONS"
+      ],
+      "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+      "CachedMethods": [
+       "GET",
+       "HEAD"
+      ],
+      "Compress": true,
+      "TargetOriginId": "AwsDzeraStackDistributionOrigin1EB31B18C",
+      "ViewerProtocolPolicy": "redirect-to-https"
+     },
+     "DefaultRootObject": "index.html",
+     "Enabled": true,
+     "HttpVersion": "http2",
+     "IPV6Enabled": true,
+     "Origins": [
+      {
+       "DomainName": {
+        "Fn::GetAtt": [
+         "FrontendBucketEFE2E19C",
+         "RegionalDomainName"
+        ]
+       },
+       "Id": "AwsDzeraStackDistributionOrigin1EB31B18C",
+       "S3OriginConfig": {
+        "OriginAccessIdentity": {
+         "Fn::Join": [
+          "",
+          [
+           "origin-access-identity/cloudfront/",
+           {
+            "Ref": "OriginAccessIdentityDF1E3CAC"
+           }
+          ]
+         ]
+        }
+       }
+      }
+     ],
+     "PriceClass": "PriceClass_100",
+     "ViewerCertificate": {
+      "AcmCertificateArn": {
+       "Ref": "CertificateArn"
+      },
+      "MinimumProtocolVersion": "TLSv1.2_2021",
+      "SslSupportMethod": "sni-only"
+     }
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/Distribution/Resource"
+   }
+  },
+  "CloudFrontAliasRecord94C98D73": {
+   "Type": "AWS::Route53::RecordSet",
+   "Properties": {
+    "AliasTarget": {
+     "DNSName": {
+      "Fn::GetAtt": [
+       "Distribution830FAC52",
+       "DomainName"
+      ]
+     },
+     "HostedZoneId": {
+      "Fn::FindInMap": [
+       "AWSCloudFrontPartitionHostedZoneIdMap",
+       {
+        "Ref": "AWS::Partition"
+       },
+       "zoneId"
+      ]
+     }
+    },
+    "HostedZoneId": {
+     "Ref": "HostedZoneDB99F866"
+    },
+    "Name": "awsdzera.com.",
+    "Type": "A"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/CloudFrontAliasRecord/Resource"
+   }
+  },
+  "CloudFrontAliasRecordIPv679BC13D5": {
+   "Type": "AWS::Route53::RecordSet",
+   "Properties": {
+    "AliasTarget": {
+     "DNSName": {
+      "Fn::GetAtt": [
+       "Distribution830FAC52",
+       "DomainName"
+      ]
+     },
+     "HostedZoneId": {
+      "Fn::FindInMap": [
+       "AWSCloudFrontPartitionHostedZoneIdMap",
+       {
+        "Ref": "AWS::Partition"
+       },
+       "zoneId"
+      ]
+     }
+    },
+    "HostedZoneId": {
+     "Ref": "HostedZoneDB99F866"
+    },
+    "Name": "awsdzera.com.",
+    "Type": "AAAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/CloudFrontAliasRecordIPv6/Resource"
+   }
+  },
+  "ScanFunctionServiceRoleDD9CDA22": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/ScanFunction/ServiceRole/Resource"
+   }
+  },
+  "ScanFunctionServiceRoleDefaultPolicy901900B2": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "kms:Decrypt",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "CredentialsKeyA24B74BF",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ScanFunctionServiceRoleDefaultPolicy901900B2",
+    "Roles": [
+     {
+      "Ref": "ScanFunctionServiceRoleDD9CDA22"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/ScanFunction/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "ScanFunction322CD7EE": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-016442247702-us-west-2",
+     "S3Key": "25e1f1353962d22334dfcbf787b724e243fdc62a04659f6dfa083a8c86ab90c9.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "KMS_KEY_ID": {
+       "Ref": "CredentialsKeyA24B74BF"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "ScanFunctionServiceRoleDD9CDA22",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "ScanFunctionServiceRoleDefaultPolicy901900B2",
+    "ScanFunctionServiceRoleDD9CDA22"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/ScanFunction/Resource",
+    "aws:asset:path": "asset.25e1f1353962d22334dfcbf787b724e243fdc62a04659f6dfa083a8c86ab90c9",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "DzeraApiD31C70CE": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Description": "API for AWS Dzera cost scanning",
+    "Name": "AWS Dzera API"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/DzeraApi/Resource"
+   }
+  },
+  "DzeraApiDeployment4C94D2C08e0fec001027f533c3aa6fab9fc4b52d": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "API for AWS Dzera cost scanning",
+    "RestApiId": {
+     "Ref": "DzeraApiD31C70CE"
+    }
+   },
+   "DependsOn": [
+    "DzeraApiOPTIONSACEC103A",
+    "DzeraApiscanOPTIONS46679A49",
+    "DzeraApiscanPOST754275EE",
+    "DzeraApiscanAE238D30"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/DzeraApi/Deployment/Resource",
+    "aws:cdk:do-not-refactor": true
+   }
+  },
+  "DzeraApiDeploymentStageprod450DCF03": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "DzeraApiDeployment4C94D2C08e0fec001027f533c3aa6fab9fc4b52d"
+    },
+    "MethodSettings": [
+     {
+      "DataTraceEnabled": false,
+      "HttpMethod": "*",
+      "ResourcePath": "/*",
+      "ThrottlingBurstLimit": 20,
+      "ThrottlingRateLimit": 10
+     }
+    ],
+    "RestApiId": {
+     "Ref": "DzeraApiD31C70CE"
+    },
+    "StageName": "prod"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/DzeraApi/DeploymentStage.prod/Resource"
+   }
+  },
+  "DzeraApiOPTIONSACEC103A": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'*'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "DzeraApiD31C70CE",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "DzeraApiD31C70CE"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/DzeraApi/Default/OPTIONS/Resource"
+   }
+  },
+  "DzeraApiscanAE238D30": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "DzeraApiD31C70CE",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "scan",
+    "RestApiId": {
+     "Ref": "DzeraApiD31C70CE"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/DzeraApi/Default/scan/Resource"
+   }
+  },
+  "DzeraApiscanOPTIONS46679A49": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'*'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "DzeraApiscanAE238D30"
+    },
+    "RestApiId": {
+     "Ref": "DzeraApiD31C70CE"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/DzeraApi/Default/scan/OPTIONS/Resource"
+   }
+  },
+  "DzeraApiscanPOSTApiPermissionAwsDzeraStackDzeraApi3D9215B9POSTscan68BC2702": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ScanFunction322CD7EE",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-west-2:016442247702:",
+       {
+        "Ref": "DzeraApiD31C70CE"
+       },
+       "/",
+       {
+        "Ref": "DzeraApiDeploymentStageprod450DCF03"
+       },
+       "/POST/scan"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/DzeraApi/Default/scan/POST/ApiPermission.AwsDzeraStackDzeraApi3D9215B9.POST..scan"
+   }
+  },
+  "DzeraApiscanPOSTApiPermissionTestAwsDzeraStackDzeraApi3D9215B9POSTscan050A64A0": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ScanFunction322CD7EE",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-west-2:016442247702:",
+       {
+        "Ref": "DzeraApiD31C70CE"
+       },
+       "/test-invoke-stage/POST/scan"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/DzeraApi/Default/scan/POST/ApiPermission.Test.AwsDzeraStackDzeraApi3D9215B9.POST..scan"
+   }
+  },
+  "DzeraApiscanPOST754275EE": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "RequestTemplates": {
+      "application/json": "{ \"statusCode\": \"200\" }"
+     },
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "ScanFunction322CD7EE",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "DzeraApiscanAE238D30"
+    },
+    "RestApiId": {
+     "Ref": "DzeraApiD31C70CE"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/DzeraApi/Default/scan/POST/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/21RTU/DMAz9LdyzAJuAcwEh0IQ2dTcuyEu9YtYmVewwVVH/O0oyRIU4+T37xR8vS71c3eqrCzjxwjTHRUd7HXcC5qjgxO/RuyB4s9Lx2bFg8+YsqoeDnbGqRuN8k7IF7VBUBQCFTerYs45rHJNijeOkeKXjfTBHlJQ6oxK2riMz/qbPvJB7YJyU6VxoDt5Z0XHjqSVbGYPMLw1aIcmPH5LmKWn+VTwSi6d9EHI2yed8Uh30+wZ0fArW/CjmeIu+J+asJeh1rF2XTcnx94KC0rnvwIzCukpBwUAtCJ5g1LFGlmqgYl6Bjzh0buzRZndmbCfQ5jkF1MgueIPJFfWK8uHyH5zRT/XcOeNpSmwTZAi59xY89CjoZ+rA4vr/Hv8pbb37ogZ9np7vSluRbfMOMAxk20lZ16D+5Muv5VJf3+mri08mWvhghXrUdYnfQkVxvYMCAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "AwsDzeraStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "NameServers": {
+   "Description": "Route 53 nameservers - update your domain registrar with these",
+   "Value": {
+    "Fn::Join": [
+     ",",
+     {
+      "Fn::GetAtt": [
+       "HostedZoneDB99F866",
+       "NameServers"
+      ]
+     }
+    ]
+   }
+  },
+  "DzeraApiEndpoint3ADF7571": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "DzeraApiD31C70CE"
+      },
+      ".execute-api.us-west-2.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "DzeraApiDeploymentStageprod450DCF03"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "FrontendBucketName": {
+   "Description": "S3 bucket for frontend assets",
+   "Value": {
+    "Ref": "FrontendBucketEFE2E19C"
+   }
+  },
+  "CloudFrontDistributionId": {
+   "Description": "CloudFront distribution ID",
+   "Value": {
+    "Ref": "Distribution830FAC52"
+   }
+  },
+  "CloudFrontURL": {
+   "Description": "CloudFront distribution URL",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Fn::GetAtt": [
+        "Distribution830FAC52",
+        "DomainName"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "CustomDomainURL": {
+   "Description": "Custom domain URL (awsdzera.com)",
+   "Value": "https://awsdzera.com"
+  },
+  "ApiGatewayUrl": {
+   "Description": "API Gateway endpoint URL",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "DzeraApiD31C70CE"
+      },
+      ".execute-api.us-west-2.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "DzeraApiDeploymentStageprod450DCF03"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "KmsKeyId": {
+   "Description": "KMS Key ID for credential encryption",
+   "Value": {
+    "Ref": "CredentialsKeyA24B74BF"
+   }
+  }
+ },
+ "Parameters": {
+  "CertificateArn": {
+   "Type": "String",
+   "Default": "",
+   "Description": "ARN of SSL certificate in us-east-1 region (from CertificateStack). Leave empty for initial deployment.",
+   "NoEcho": false
+  },
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Mappings": {
+  "AWSCloudFrontPartitionHostedZoneIdMap": {
+   "aws": {
+    "zoneId": "Z2FDTNDATAQYW2"
+   },
+   "aws-cn": {
+    "zoneId": "Z3RFFRIM2A3IF5"
+   }
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

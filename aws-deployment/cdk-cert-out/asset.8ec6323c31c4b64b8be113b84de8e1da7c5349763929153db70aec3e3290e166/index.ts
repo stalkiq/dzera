@@ -426,7 +426,7 @@ export const handler = async (
   try {
     const headers = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': '*',
+      'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Content-Type': 'application/json',
     };
@@ -440,32 +440,26 @@ export const handler = async (
     }
 
     const body = JSON.parse(event.body || '{}');
-    const { encryptedCredentials, accessKeyId: rawAccessKey, secretAccessKey: rawSecretKey, region } = body;
+    const { encryptedCredentials, region } = body;
 
-    let accessKeyId = rawAccessKey;
-    let secretAccessKey = rawSecretKey;
-
-    if (encryptedCredentials) {
-      const kmsKeyId = process.env.KMS_KEY_ID;
-      if (!kmsKeyId) {
-        throw new Error('KMS_KEY_ID not configured');
-      }
-      // Decrypt credentials if they are encrypted
-      const decrypted = await decryptCredentials(
-        encryptedCredentials,
-        kmsKeyId
-      );
-      accessKeyId = decrypted.accessKeyId;
-      secretAccessKey = decrypted.secretAccessKey;
-    }
-
-    if (!accessKeyId || !secretAccessKey) {
+    if (!encryptedCredentials) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'AWS credentials required' }),
+        body: JSON.stringify({ error: 'Encrypted credentials required' }),
       };
     }
+
+    const kmsKeyId = process.env.KMS_KEY_ID;
+    if (!kmsKeyId) {
+      throw new Error('KMS_KEY_ID not configured');
+    }
+
+    // Decrypt credentials
+    const { accessKeyId, secretAccessKey } = await decryptCredentials(
+      encryptedCredentials,
+      kmsKeyId
+    );
 
     // Run scan
     const result = await scanAwsCosts(accessKeyId, secretAccessKey, region);
