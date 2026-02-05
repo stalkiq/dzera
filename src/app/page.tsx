@@ -648,52 +648,57 @@ export default function Home() {
 
           <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex h-[800px]">
             {/* Activity Bar */}
-            <div className="w-12 bg-[#0d1117] border-r border-[#30363d] flex flex-col items-center py-4 gap-4">
+            <div className="w-12 bg-[#0d1117] border-r border-[#30363d] flex flex-col items-center py-3 gap-2">
               <div className="group relative">
-                <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="files" size="md" active={activeTab === "credentials.aws"} />
+                <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                  <ThemedIcon variant="files" size="sm" active={activeTab === "credentials.aws"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Explorer</div>
               </div>
               
               <div className="group relative">
-                <div onClick={() => handleTabClick("cost-reports.md")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="chart" size="md" active={activeTab === "cost-reports.md"} />
+                <div onClick={() => handleTabClick("cost-reports.md")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                  <ThemedIcon variant="chart" size="sm" active={activeTab === "cost-reports.md"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Reports</div>
               </div>
 
               <div className="group relative">
-                <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="gear" size="md" active={activeTab === "scanner.config"} />
+                <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                  <ThemedIcon variant="gear" size="sm" active={activeTab === "scanner.config"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Configuration</div>
               </div>
 
               <div className="group relative">
-                <div onClick={() => handleTabClick("aws-services.json")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="grid" size="md" active={activeTab === "aws-services.json"} />
+                <div onClick={() => handleTabClick("aws-services.json")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                  <ThemedIcon variant="grid" size="sm" active={activeTab === "aws-services.json"} />
                 </div>
-                <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Service Directory</div>
+                <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Services</div>
               </div>
 
               <div className="group relative">
-                <div onClick={() => setShowCommandPalette(true)} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="search" size="md" active={showCommandPalette} />
-                </div>
+                <button 
+                  onClick={() => setShowCommandPalette(true)} 
+                  className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22] bg-[#FF9900]/10 border border-[#FF9900]/30"
+                  aria-label="Search"
+                  title="Search (⌘K)"
+                >
+                  <ThemedIcon variant="search" size="sm" active={showCommandPalette} />
+                </button>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Search (⌘K)</div>
               </div>
 
-              <div className="mt-auto flex flex-col gap-4 mb-2">
+              <div className="mt-auto flex flex-col gap-2 mb-1">
                 <div className="group relative">
-                  <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                    <ThemedIcon variant="gear" size="md" active={false} />
+                  <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                    <ThemedIcon variant="gear" size="sm" active={false} />
                   </div>
                   <div className="absolute left-14 bottom-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Settings</div>
                 </div>
                 <div className="group relative">
-                  <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                    <ThemedIcon variant="user" size="md" active={false} />
+                  <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                    <ThemedIcon variant="user" size="sm" active={false} />
                   </div>
                   <div className="absolute left-14 bottom-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Account</div>
                 </div>
@@ -1436,45 +1441,57 @@ export default function Home() {
 
           <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex h-[800px]">
             {/* Activity Bar */}
-            <div className="w-12 bg-[#0d1117] border-r border-[#30363d] flex flex-col items-center py-4 gap-4">
+            <div className="w-12 bg-[#0d1117] border-r border-[#30363d] flex flex-col items-center py-3 gap-2">
               <div className="group relative">
-                <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="files" size="md" active={activeTab === "credentials.aws"} />
+                <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                  <ThemedIcon variant="files" size="sm" active={activeTab === "credentials.aws"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Explorer</div>
               </div>
               
               <div className="group relative">
-                <div onClick={() => handleTabClick("cost-reports.md")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="chart" size="md" active={activeTab === "cost-reports.md"} />
+                <div onClick={() => handleTabClick("cost-reports.md")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                  <ThemedIcon variant="chart" size="sm" active={activeTab === "cost-reports.md"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Reports</div>
               </div>
 
               <div className="group relative">
-                <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="gear" size="md" active={activeTab === "scanner.config"} />
+                <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                  <ThemedIcon variant="gear" size="sm" active={activeTab === "scanner.config"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Configuration</div>
               </div>
 
               <div className="group relative">
-                <div onClick={() => handleTabClick("aws-services.json")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                  <ThemedIcon variant="grid" size="md" active={activeTab === "aws-services.json"} />
+                <div onClick={() => handleTabClick("aws-services.json")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                  <ThemedIcon variant="grid" size="sm" active={activeTab === "aws-services.json"} />
                 </div>
                 <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Services</div>
               </div>
 
-              <div className="mt-auto flex flex-col gap-4 mb-2">
+              <div className="group relative">
+                <button 
+                  onClick={() => setShowCommandPalette(true)} 
+                  className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22] bg-[#FF9900]/10 border border-[#FF9900]/30"
+                  aria-label="Search"
+                  title="Search (⌘K)"
+                >
+                  <ThemedIcon variant="search" size="sm" active={showCommandPalette} />
+                </button>
+                <div className="absolute left-14 top-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Search (⌘K)</div>
+              </div>
+
+              <div className="mt-auto flex flex-col gap-2 mb-1">
                 <div className="group relative">
-                  <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                    <ThemedIcon variant="gear" size="md" />
+                  <div onClick={() => handleTabClick("scanner.config")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                    <ThemedIcon variant="gear" size="sm" />
                   </div>
                   <div className="absolute left-14 bottom-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Settings</div>
                 </div>
                 <div className="group relative">
-                  <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
-                    <ThemedIcon variant="gear" size="md" />
+                  <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer transition-transform hover:scale-110 active:scale-95 p-1.5 rounded hover:bg-[#161b22]">
+                    <ThemedIcon variant="user" size="sm" />
                   </div>
                   <div className="absolute left-14 bottom-0 bg-[#161b22] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-[#30363d] shadow-xl">Account</div>
                 </div>
