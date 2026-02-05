@@ -351,7 +351,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   
   // Mobile navigation state
-  const [mobileView, setMobileView] = useState<"scan" | "services" | "chat" | "terminal">("scan");
+  const [mobileView, setMobileView] = useState<"scan" | "services" | "chat" | "terminal" | "details">("scan");
   
   // Command Palette Search State
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -413,6 +413,9 @@ export default function Home() {
     const tabId = `${service.toLowerCase().replace(/\s+/g, '-')}.md`;
     setOpenTabs(prev => prev.includes(tabId) ? prev : [...prev, tabId]);
     setActiveTab(tabId);
+    
+    // Switch to details view on mobile
+    setMobileView("details");
 
     setTimeout(() => {
       addLog(`${service} analysis complete.`, "info");
@@ -869,6 +872,101 @@ export default function Home() {
                       </div>
                     ))
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Service Details View */}
+            {mobileView === "details" && activeTab.endsWith('.md') && (
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 180px)' }}>
+                <div className="h-12 bg-[#161b22] flex items-center justify-between border-b border-[#30363d] px-3">
+                  <div className="flex items-center gap-2">
+                    <DLogo size="sm" active />
+                    <span className="text-sm font-bold text-white capitalize">{activeTab.replace('.md', '').replace(/-/g, ' ')}</span>
+                  </div>
+                  <button 
+                    onClick={() => setMobileView("services")} 
+                    className="text-xs text-gray-400 hover:text-[#FF9900] bg-[#0d1117] border border-[#30363d] px-3 py-1.5 rounded-lg"
+                  >
+                    ← Back
+                  </button>
+                </div>
+                <div className="p-4 h-[calc(100%-48px)] overflow-y-auto space-y-4">
+                  {(() => {
+                    const serviceName = activeTab.replace('.md', '').replace(/-/g, ' ');
+                    const serviceInfo = getServiceInfo(activeTab);
+                    return (
+                      <>
+                        {/* Service Header */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <DLogo size="lg" active />
+                            <h2 className="text-xl font-black text-white tracking-tight capitalize">
+                              {serviceName}
+                            </h2>
+                          </div>
+                          <p className="text-gray-400 text-sm">{serviceInfo.desc}</p>
+                        </div>
+
+                        {/* Service Overview */}
+                        <div className="bg-gradient-to-r from-[#FF9900]/10 to-transparent border-l-2 border-[#FF9900] p-3 rounded-r-lg">
+                          <h3 className="text-xs font-bold text-[#FF9900] uppercase tracking-wider mb-2">Service Overview</h3>
+                          <p className="text-gray-300 text-sm leading-relaxed">{serviceInfo.details}</p>
+                        </div>
+
+                        {/* Analysis Scope */}
+                        <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3">
+                          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Analysis Scope</h3>
+                          <div className="space-y-2">
+                            {serviceInfo.scans.map((scan: string, idx: number) => (
+                              <div key={idx} className="flex items-start gap-2">
+                                <DLogo size="xs" active />
+                                <span className="text-gray-300 text-sm">{scan}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Optimization Actions */}
+                        <div className="space-y-2">
+                          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Quick Actions</h3>
+                          <div className="grid grid-cols-2 gap-2">
+                            <a 
+                              href={`https://console.aws.amazon.com/${serviceName.toLowerCase().replace(/\s+/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 text-center hover:border-[#FF9900]/50 transition-colors"
+                            >
+                              <ThemedIcon variant="d" size="sm" active />
+                              <p className="text-xs text-gray-400 mt-1">AWS Console</p>
+                            </a>
+                            <button 
+                              onClick={() => {
+                                addLog(`Deep scan initiated for ${serviceName}...`, "info");
+                                setMobileView("terminal");
+                              }}
+                              className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 text-center hover:border-[#FF9900]/50 transition-colors"
+                            >
+                              <ThemedIcon variant="terminal" size="sm" active />
+                              <p className="text-xs text-gray-400 mt-1">Deep Scan</p>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Recommendation */}
+                        <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3">
+                          <h3 className="text-xs font-bold text-[#FF9900] mb-2 flex items-center gap-2">
+                            <DLogo size="xs" active />
+                            Recommendation
+                          </h3>
+                          <p className="text-gray-400 text-xs leading-relaxed">
+                            For comprehensive {serviceName} cost optimization, run a full infrastructure analysis using your AWS credentials. 
+                            This will identify specific resources, their costs, and actionable savings opportunities.
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             )}
