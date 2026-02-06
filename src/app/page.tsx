@@ -595,6 +595,147 @@ export default function Home() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   
+  // Smart Onboarding Assistant State
+  const [onboardingStep, setOnboardingStep] = useState<"welcome" | "experience" | "guide" | "credentials" | "ready" | "skipped">("welcome");
+  const [onboardingMessages, setOnboardingMessages] = useState<{role: "assistant" | "user"; content: string; options?: string[]}[]>([
+    { role: "assistant", content: "Welcome to AWS Dzera! 👋 I'll help you connect your AWS account safely and run your first cost analysis. How familiar are you with AWS?", options: ["I'm new to AWS", "I know the basics", "I'm an AWS expert"] }
+  ]);
+  const [onboardingTyping, setOnboardingTyping] = useState(false);
+  const [onboardingNovaLoading, setOnboardingNovaLoading] = useState(false);
+  const onboardingEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll onboarding messages
+  useEffect(() => {
+    onboardingEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [onboardingMessages, onboardingTyping]);
+
+  // Smart Onboarding handler
+  const handleOnboardingChoice = useCallback(async (choice: string) => {
+    // Add user's choice as a message
+    setOnboardingMessages(prev => [...prev, { role: "user", content: choice }]);
+    setOnboardingTyping(true);
+
+    // Simulate brief typing delay for natural feel
+    await new Promise(r => setTimeout(r, 800));
+
+    if (onboardingStep === "welcome") {
+      // Respond based on experience level
+      if (choice === "I'm new to AWS") {
+        setOnboardingMessages(prev => [...prev, {
+          role: "assistant",
+          content: "No worries — I'll walk you through everything! To scan your AWS account, you need an **Access Key ID** and **Secret Access Key**. These are like a username and password that let Dzera read (but never modify) your AWS resources.\n\nHere's how to create them:",
+        }]);
+        setOnboardingTyping(false);
+        await new Promise(r => setTimeout(r, 600));
+        setOnboardingTyping(true);
+        await new Promise(r => setTimeout(r, 1000));
+        setOnboardingMessages(prev => [...prev, {
+          role: "assistant",
+          content: "**Step 1:** Go to [AWS IAM Console](https://console.aws.amazon.com/iam)\n**Step 2:** Click **Users** → **Create user** → name it `dzera-readonly`\n**Step 3:** Attach the **ReadOnlyAccess** policy\n**Step 4:** Go to **Security credentials** tab → **Create access key**\n**Step 5:** Copy both keys and paste them below 👇",
+        }]);
+        setOnboardingStep("guide");
+      } else if (choice === "I know the basics") {
+        setOnboardingMessages(prev => [...prev, {
+          role: "assistant",
+          content: "Great! You'll need an **IAM user** with **ReadOnlyAccess** policy. If you haven't created one yet:\n\n→ **IAM Console** → **Users** → **Create user** → Attach `ReadOnlyAccess` → **Security credentials** → **Create access key**\n\nPaste your credentials below when ready 👇",
+        }]);
+        setOnboardingStep("guide");
+      } else {
+        setOnboardingMessages(prev => [...prev, {
+          role: "assistant",
+          content: "Excellent! You know the drill — paste your IAM credentials below. Dzera uses **read-only** API calls (DescribeInstances, ListBuckets, etc.) and never modifies your resources. 🔒",
+        }]);
+        setOnboardingStep("guide");
+      }
+      setOnboardingTyping(false);
+      await new Promise(r => setTimeout(r, 400));
+      setOnboardingTyping(true);
+      await new Promise(r => setTimeout(r, 700));
+      setOnboardingMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Paste your **Access Key ID** and **Secret Access Key** in the fields below:",
+      }]);
+      setOnboardingTyping(false);
+      setOnboardingStep("credentials");
+      return;
+    }
+
+    if (onboardingStep === "credentials" && choice === "ask_nova") {
+      // User wants to ask Nova a question about the process
+      setOnboardingNovaLoading(true);
+      setOnboardingTyping(true);
+      try {
+        const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+        const apiUrl = isProduction 
+          ? 'https://8phpxwcke6.execute-api.us-west-2.amazonaws.com/prod/chat' 
+          : '/api/chat';
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [{ role: "user", content: choice }] }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setOnboardingMessages(prev => [...prev, {
+            role: "assistant",
+            content: data.message || "I can help with that! Please make sure you have an IAM user with ReadOnlyAccess.",
+          }]);
+        } else {
+          setOnboardingMessages(prev => [...prev, {
+            role: "assistant",
+            content: "To create credentials: Go to **IAM Console** → **Users** → **Create user** → attach `ReadOnlyAccess` → **Security credentials** → **Create access key**. Copy both keys and paste them in the fields below.",
+          }]);
+        }
+      } catch {
+        setOnboardingMessages(prev => [...prev, {
+          role: "assistant",
+          content: "To create credentials: Go to **IAM Console** → **Users** → **Create user** → attach `ReadOnlyAccess` → **Security credentials** → **Create access key**. Copy both keys and paste them in the fields below.",
+        }]);
+      }
+      setOnboardingNovaLoading(false);
+      setOnboardingTyping(false);
+      return;
+    }
+
+    setOnboardingTyping(false);
+  }, [onboardingStep]);
+
+  // Handle credential validation in onboarding
+  const handleOnboardingValidate = useCallback(() => {
+    const keyId = credentials.accessKeyId.trim();
+    const secret = credentials.secretAccessKey.trim();
+    
+    if (!keyId || !secret) {
+      setOnboardingMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Please fill in both fields — I need your **Access Key ID** (starts with AKIA...) and your **Secret Access Key** to proceed.",
+      }]);
+      return;
+    }
+
+    if (!keyId.startsWith("AKIA") && !keyId.startsWith("ASIA")) {
+      setOnboardingMessages(prev => [...prev, {
+        role: "assistant",
+        content: "⚠️ That Access Key ID doesn't look right — it should start with **AKIA** (long-term) or **ASIA** (temporary session). Double-check you copied the right value from the IAM Console.",
+      }]);
+      return;
+    }
+
+    if (secret.length < 20) {
+      setOnboardingMessages(prev => [...prev, {
+        role: "assistant",
+        content: "⚠️ The Secret Access Key looks too short. AWS secret keys are typically 40 characters long. Make sure you copied the full key.",
+      }]);
+      return;
+    }
+
+    setOnboardingMessages(prev => [...prev, 
+      { role: "user", content: "Credentials entered ✓" },
+      { role: "assistant", content: "Credentials look good! ✅ Here's what the scan will do:\n\n• **EC2** — Find idle/oversized instances\n• **S3** — Check storage class optimization\n• **RDS** — Identify overprovisioned databases\n• **EBS** — Detect unattached volumes\n• **Elastic IPs** — Find unused IPs ($3.65/mo each)\n• **NAT Gateways** — Review data processing costs\n\nThe scan is **100% read-only** and takes about 30-60 seconds.", options: ["🚀 Start Analysis", "Cancel"] }
+    ]);
+    setOnboardingStep("ready");
+  }, [credentials]);
+
   // Mobile navigation state
   const [mobileView, setMobileView] = useState<"scan" | "services" | "chat" | "terminal" | "details">("scan");
   
@@ -1000,63 +1141,182 @@ export default function Home() {
           <div className="sm:hidden">
             {/* Scan View */}
             {mobileView === "scan" && (
-              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-4 space-y-4">
-                <div className="text-center space-y-2">
-                  <h2 className="text-xl font-black text-white">Connect AWS Account</h2>
-                  <p className="text-gray-400 text-xs">Enter your credentials to analyze infrastructure costs.</p>
-                </div>
-                
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Access Key ID</label>
-                    <input
-                      type="text"
-                      placeholder="AKIA..."
-                      value={credentials.accessKeyId}
-                      onChange={(e) => setCredentials(prev => ({ ...prev, accessKeyId: e.target.value }))}
-                      className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-3 text-sm text-white focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] outline-none"
-                    />
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 160px)' }}>
+                {/* Onboarding Header */}
+                <div className="h-10 bg-[#161b22] flex items-center justify-between border-b border-[#30363d] px-3">
+                  <div className="flex items-center gap-2">
+                    <DLogo size="sm" active />
+                    <span className="text-xs font-bold text-white">Smart Setup Assistant</span>
+                    <span className="text-[9px] bg-[#FF9900]/20 text-[#FF9900] px-1.5 py-0.5 rounded font-bold">Nova AI</span>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Secret Access Key</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••••••••••"
-                      value={credentials.secretAccessKey}
-                      onChange={(e) => setCredentials(prev => ({ ...prev, secretAccessKey: e.target.value }))}
-                      className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-3 text-sm text-white focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] outline-none"
-                    />
+                  {onboardingStep !== "skipped" && (
+                    <button
+                      onClick={() => setOnboardingStep("skipped")}
+                      className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                      Skip →
+                    </button>
+                  )}
+                  {onboardingStep === "skipped" && (
+                    <button
+                      onClick={() => { setOnboardingStep("welcome"); setOnboardingMessages([{ role: "assistant", content: "Welcome to AWS Dzera! 👋 I'll help you connect your AWS account safely and run your first cost analysis. How familiar are you with AWS?", options: ["I'm new to AWS", "I know the basics", "I'm an AWS expert"] }]); }}
+                      className="text-[10px] text-[#FF9900] hover:text-[#e68a00] transition-colors"
+                    >
+                      ← Assistant
+                    </button>
+                  )}
+                </div>
+
+                {onboardingStep === "skipped" ? (
+                  /* Classic Form (Skip Mode) */
+                  <div className="p-4 space-y-4 overflow-y-auto" style={{ height: 'calc(100% - 40px)' }}>
+                    <div className="text-center space-y-2">
+                      <h2 className="text-xl font-black text-white">Connect AWS Account</h2>
+                      <p className="text-gray-400 text-xs">Enter your credentials to analyze infrastructure costs.</p>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Access Key ID</label>
+                        <input type="text" placeholder="AKIA..." value={credentials.accessKeyId} onChange={(e) => setCredentials(prev => ({ ...prev, accessKeyId: e.target.value }))} className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-3 text-sm text-white focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Secret Access Key</label>
+                        <input type="password" placeholder="••••••••••••••••" value={credentials.secretAccessKey} onChange={(e) => setCredentials(prev => ({ ...prev, secretAccessKey: e.target.value }))} className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-3 text-sm text-white focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] outline-none" />
+                      </div>
+                    </div>
+                    <button onClick={handleVerify} disabled={!credentials.accessKeyId || !credentials.secretAccessKey} className="w-full bg-[#FF9900] hover:bg-[#e68a00] disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-3.5 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                      <DLogo size="xs" /><span>ANALYZE INFRASTRUCTURE</span>
+                    </button>
+                    {error && <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3"><span className="text-xs text-red-200">{error}</span></div>}
+                    <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3">
+                      <p className="text-[10px] text-gray-400 leading-relaxed">🔒 Use an IAM user with ReadOnlyAccess. Dzera never modifies your account.</p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  /* Smart Onboarding Chat */
+                  <div className="flex flex-col" style={{ height: 'calc(100% - 40px)' }}>
+                    {/* Messages */}
+                    <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                      {onboardingMessages.map((msg, idx) => (
+                        <div key={idx} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                          {msg.role === "assistant" && (
+                            <div className="w-6 h-6 bg-[#FF9900] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <span className="text-[10px] font-black text-black">D</span>
+                            </div>
+                          )}
+                          <div className={`max-w-[85%] ${msg.role === "user" ? "bg-[#FF9900] text-black rounded-2xl rounded-br-sm px-3 py-2" : "bg-[#161b22] border border-[#30363d] text-gray-200 rounded-2xl rounded-bl-sm px-3 py-2"}`}>
+                            <p className="text-xs leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>').replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-[#FF9900] underline">$1</a>').replace(/\n/g, '<br/>') }} />
+                            {msg.options && (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {msg.options.map((opt, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={() => {
+                                      if (opt === "🚀 Start Analysis") {
+                                        handleVerify();
+                                      } else if (opt === "Cancel") {
+                                        setOnboardingStep("credentials");
+                                        setOnboardingMessages(prev => [...prev, { role: "user", content: "Cancel" }, { role: "assistant", content: "No problem! Your credentials are still saved in the fields below. Click **Start Analysis** whenever you're ready, or ask me any questions.", options: ["🚀 Start Analysis"] }]);
+                                      } else {
+                                        handleOnboardingChoice(opt);
+                                      }
+                                    }}
+                                    className={`text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all active:scale-95 ${opt.includes("🚀") ? "bg-[#FF9900] text-black hover:bg-[#e68a00]" : opt === "Cancel" ? "bg-[#21262d] text-gray-400 hover:text-white border border-[#30363d]" : "bg-[#21262d] text-[#FF9900] hover:bg-[#FF9900]/20 border border-[#FF9900]/30"}`}
+                                  >
+                                    {opt}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {onboardingTyping && (
+                        <div className="flex gap-2 justify-start">
+                          <div className="w-6 h-6 bg-[#FF9900] rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-[10px] font-black text-black">D</span>
+                          </div>
+                          <div className="bg-[#161b22] border border-[#30363d] rounded-2xl rounded-bl-sm px-3 py-2">
+                            <div className="flex space-x-1">
+                              <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"></div>
+                              <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></div>
+                              <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={onboardingEndRef} />
+                    </div>
 
-                <button
-                  onClick={handleVerify}
-                  disabled={!credentials.accessKeyId || !credentials.secretAccessKey}
-                  className="w-full bg-[#FF9900] hover:bg-[#e68a00] disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-3.5 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                >
-                  <DLogo size="xs" />
-                  <span>ANALYZE INFRASTRUCTURE</span>
-                </button>
+                    {/* Credential Fields (shown after guide step) */}
+                    {(onboardingStep === "credentials" || onboardingStep === "ready") && (
+                      <div className="border-t border-[#30363d] p-3 space-y-2 bg-[#0d1117]">
+                        <div className="grid grid-cols-1 gap-2">
+                          <input
+                            type="text"
+                            placeholder="Access Key ID (AKIA...)"
+                            value={credentials.accessKeyId}
+                            onChange={(e) => setCredentials(prev => ({ ...prev, accessKeyId: e.target.value }))}
+                            className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2.5 text-xs text-white focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] outline-none placeholder-gray-600"
+                          />
+                          <input
+                            type="password"
+                            placeholder="Secret Access Key"
+                            value={credentials.secretAccessKey}
+                            onChange={(e) => setCredentials(prev => ({ ...prev, secretAccessKey: e.target.value }))}
+                            className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2.5 text-xs text-white focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] outline-none placeholder-gray-600"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={onboardingStep === "ready" ? handleVerify : handleOnboardingValidate}
+                            className="flex-1 bg-[#FF9900] hover:bg-[#e68a00] text-black font-bold py-2.5 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 text-xs"
+                          >
+                            <DLogo size="xs" />
+                            {onboardingStep === "ready" ? "🚀 Start Analysis" : "Validate & Continue"}
+                          </button>
+                        </div>
+                        {error && <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-2"><span className="text-[10px] text-red-200">{error}</span></div>}
+                      </div>
+                    )}
 
-                <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3">
-                  <h4 className="text-xs font-bold text-white mb-1.5 flex items-center gap-1.5">
-                    <DLogo size="xs" />
-                    Security Notice
-                  </h4>
-                  <p className="text-[10px] text-gray-400 leading-relaxed">
-                    Use an IAM user with ReadOnlyAccess policy. Dzera only reads resources and never modifies your account.
-                  </p>
-                </div>
-
-                {/* Quick Links */}
-                <div className="flex gap-2">
-                  <a href="/why-dzera" className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2.5 text-center text-xs text-gray-400 hover:text-[#FF9900] hover:border-[#FF9900]/50 transition-colors">
-                    Documentation
-                  </a>
-                  <a href="https://github.com/stalkiq/dzera" target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2.5 text-center text-xs text-gray-400 hover:text-[#FF9900] hover:border-[#FF9900]/50 transition-colors">
-                    GitHub
-                  </a>
-                </div>
+                    {/* Ask Nova input (when in credentials step) */}
+                    {onboardingStep === "credentials" && (
+                      <div className="border-t border-[#30363d] px-3 py-2 bg-[#0b0f14]">
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            placeholder="Ask Dzera anything about AWS..."
+                            className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-[#FF9900] outline-none placeholder-gray-600"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                                const q = (e.target as HTMLInputElement).value.trim();
+                                setOnboardingMessages(prev => [...prev, { role: "user", content: q }]);
+                                (e.target as HTMLInputElement).value = '';
+                                handleOnboardingChoice("ask_nova");
+                                // Actually pass the real question
+                                setTimeout(async () => {
+                                  setOnboardingTyping(true);
+                                  try {
+                                    const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+                                    const apiUrl = isProduction ? 'https://8phpxwcke6.execute-api.us-west-2.amazonaws.com/prod/chat' : '/api/chat';
+                                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: "user", content: q }] }) });
+                                    if (response.ok) {
+                                      const data = await response.json();
+                                      setOnboardingMessages(prev => [...prev, { role: "assistant", content: data.message || "Let me help with that!" }]);
+                                    }
+                                  } catch { /* silent */ }
+                                  setOnboardingTyping(false);
+                                }, 100);
+                              }
+                            }}
+                          />
+                          <span className="text-[9px] text-gray-600 flex-shrink-0">Nova AI</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1393,82 +1653,200 @@ export default function Home() {
               {/* Tab Content */}
               <div className="flex-1 overflow-y-auto p-6 lg:p-10">
                 {activeTab === "credentials.aws" && (
-                  <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="space-y-2 text-center lg:text-left">
-                      <h2 className="text-3xl font-black text-white tracking-tight">Connect AWS Account</h2>
-                      <p className="text-gray-400 text-sm">Provide your access credentials to initiate the infrastructure cost analysis.</p>
-                    </div>
-
-                    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 space-y-6 shadow-xl">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Access Key ID</label>
-                          <input
-                            type="text"
-                            placeholder="AKIA..."
-                            value={credentials.accessKeyId}
-                            onChange={(e) =>
-                              setCredentials({ ...credentials, accessKeyId: e.target.value })
-                            }
-                            className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent transition-all"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Secret Access Key</label>
-                          <input
-                            type="password"
-                            placeholder="••••••••••••••••"
-                            value={credentials.secretAccessKey}
-                            onChange={(e) =>
-                              setCredentials({
-                                ...credentials,
-                                secretAccessKey: e.target.value,
-                              })
-                            }
-                            className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent transition-all"
-                          />
+                  <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    {/* Smart Onboarding Header */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                          <DLogo size="lg" active />
+                          <div>
+                            <h2 className="text-2xl font-black text-white tracking-tight">Connect AWS Account</h2>
+                            <p className="text-gray-400 text-xs flex items-center gap-2">
+                              Smart Setup Assistant
+                              <span className="text-[9px] bg-[#FF9900]/20 text-[#FF9900] px-1.5 py-0.5 rounded font-bold">Nova AI</span>
+                            </p>
+                          </div>
                         </div>
                       </div>
-
-                      {error && (
-                        <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3 flex items-start gap-3">
-                          <DLogo size="sm" />
-                          <span className="text-sm text-red-200">{error}</span>
-                        </div>
+                      {onboardingStep !== "skipped" ? (
+                        <button onClick={() => setOnboardingStep("skipped")} className="text-xs text-gray-500 hover:text-gray-300 transition-colors border border-[#30363d] px-3 py-1.5 rounded-lg hover:bg-[#161b22]">
+                          Skip to form →
+                        </button>
+                      ) : (
+                        <button onClick={() => { setOnboardingStep("welcome"); setOnboardingMessages([{ role: "assistant", content: "Welcome to AWS Dzera! 👋 I'll help you connect your AWS account safely and run your first cost analysis. How familiar are you with AWS?", options: ["I'm new to AWS", "I know the basics", "I'm an AWS expert"] }]); }} className="text-xs text-[#FF9900] hover:text-[#e68a00] transition-colors border border-[#FF9900]/30 px-3 py-1.5 rounded-lg hover:bg-[#FF9900]/10">
+                          ← Back to Assistant
+                        </button>
                       )}
-
-                      <button
-                        onClick={handleVerify}
-                        className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-black font-black py-3.5 rounded-lg shadow-lg shadow-orange-500/10 hover:shadow-orange-500/30 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
-                      >
-                        <DLogo size="sm" active />
-                        ANALYZE INFRASTRUCTURE
-                      </button>
                     </div>
 
-                    <div className="bg-blue-900/10 border border-blue-500/30 rounded-xl p-5">
-                      <div className="flex gap-4">
-                        <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                          <DLogo size="sm" />
+                    {onboardingStep === "skipped" ? (
+                      /* Classic Form */
+                      <>
+                        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 space-y-6 shadow-xl">
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Access Key ID</label>
+                              <input type="text" placeholder="AKIA..." value={credentials.accessKeyId} onChange={(e) => setCredentials({ ...credentials, accessKeyId: e.target.value })} className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent transition-all" />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Secret Access Key</label>
+                              <input type="password" placeholder="••••••••••••••••" value={credentials.secretAccessKey} onChange={(e) => setCredentials({ ...credentials, secretAccessKey: e.target.value })} className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent transition-all" />
+                            </div>
+                          </div>
+                          {error && (
+                            <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3 flex items-start gap-3">
+                              <DLogo size="sm" />
+                              <span className="text-sm text-red-200">{error}</span>
+                            </div>
+                          )}
+                          <button onClick={handleVerify} className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-black font-black py-3.5 rounded-lg shadow-lg shadow-orange-500/10 hover:shadow-orange-500/30 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2">
+                            <DLogo size="sm" active />
+                            ANALYZE INFRASTRUCTURE
+                          </button>
                         </div>
-                        <div className="space-y-1">
-                          <h4 className="text-sm font-bold text-blue-300">Security Notice</h4>
-                        <p className="text-xs text-blue-200/70 leading-relaxed">
-                          For optimal security, utilize an IAM user configured with <code className="bg-blue-500/20 px-1 rounded">ReadOnlyAccess</code>. 
-                          Dzera performs read-only operations and does not modify your resources.
-                        </p>
-                        <a 
-                          href="https://console.aws.amazon.com/iam" 
-                          target="_blank" 
-                          className="text-xs font-bold text-[#FF9900] hover:text-[#e68a00] flex items-center gap-1 pt-1 transition-all hover:translate-x-1 active:scale-95"
-                        >
-                          IAM Configuration Guide <ExternalLink className="w-3 h-3" />
+                        <div className="bg-blue-900/10 border border-blue-500/30 rounded-xl p-5">
+                          <div className="flex gap-4">
+                            <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0"><DLogo size="sm" /></div>
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-bold text-blue-300">Security Notice</h4>
+                              <p className="text-xs text-blue-200/70 leading-relaxed">For optimal security, utilize an IAM user configured with <code className="bg-blue-500/20 px-1 rounded">ReadOnlyAccess</code>. Dzera performs read-only operations and does not modify your resources.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      /* Smart Onboarding Chat - Desktop */
+                      <>
+                        <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden shadow-xl">
+                          {/* Chat Messages */}
+                          <div className="p-5 space-y-4 max-h-[400px] overflow-y-auto">
+                            {onboardingMessages.map((msg, idx) => (
+                              <div key={idx} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                                {msg.role === "assistant" && (
+                                  <div className="w-8 h-8 bg-[#FF9900] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <span className="text-xs font-black text-black">D</span>
+                                  </div>
+                                )}
+                                <div className={`max-w-[80%] ${msg.role === "user" ? "bg-[#FF9900] text-black rounded-2xl rounded-br-sm px-4 py-2.5" : "bg-[#0d1117] border border-[#30363d] text-gray-200 rounded-2xl rounded-bl-sm px-4 py-2.5"}`}>
+                                  <p className="text-sm leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>').replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-[#FF9900] underline hover:text-[#e68a00]">$1</a>').replace(/\n/g, '<br/>') }} />
+                                  {msg.options && (
+                                    <div className="flex flex-wrap gap-2 mt-3">
+                                      {msg.options.map((opt, i) => (
+                                        <button
+                                          key={i}
+                                          onClick={() => {
+                                            if (opt === "🚀 Start Analysis") handleVerify();
+                                            else if (opt === "Cancel") {
+                                              setOnboardingStep("credentials");
+                                              setOnboardingMessages(prev => [...prev, { role: "user", content: "Cancel" }, { role: "assistant", content: "No problem! Your credentials are still saved. Click **Start Analysis** whenever you're ready.", options: ["🚀 Start Analysis"] }]);
+                                            } else handleOnboardingChoice(opt);
+                                          }}
+                                          className={`text-xs font-semibold px-4 py-2 rounded-full transition-all active:scale-95 ${opt.includes("🚀") ? "bg-[#FF9900] text-black hover:bg-[#e68a00] shadow-lg shadow-orange-500/20" : opt === "Cancel" ? "bg-[#21262d] text-gray-400 hover:text-white border border-[#30363d]" : "bg-[#21262d] text-[#FF9900] hover:bg-[#FF9900]/20 border border-[#FF9900]/30 hover:border-[#FF9900]"}`}
+                                        >
+                                          {opt}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            {onboardingTyping && (
+                              <div className="flex gap-3 justify-start">
+                                <div className="w-8 h-8 bg-[#FF9900] rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs font-black text-black">D</span>
+                                </div>
+                                <div className="bg-[#0d1117] border border-[#30363d] rounded-2xl rounded-bl-sm px-4 py-3">
+                                  <div className="flex space-x-1.5">
+                                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></div>
+                                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            <div ref={onboardingEndRef} />
+                          </div>
+
+                          {/* Credential Fields - Desktop */}
+                          {(onboardingStep === "credentials" || onboardingStep === "ready") && (
+                            <div className="border-t border-[#30363d] p-5 bg-[#0d1117] space-y-4">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Access Key ID</label>
+                                  <input type="text" placeholder="AKIA..." value={credentials.accessKeyId} onChange={(e) => setCredentials(prev => ({ ...prev, accessKeyId: e.target.value }))} className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2.5 text-sm text-white focus:ring-2 focus:ring-[#FF9900] focus:border-transparent outline-none" />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Secret Access Key</label>
+                                  <input type="password" placeholder="••••••••••••••••" value={credentials.secretAccessKey} onChange={(e) => setCredentials(prev => ({ ...prev, secretAccessKey: e.target.value }))} className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2.5 text-sm text-white focus:ring-2 focus:ring-[#FF9900] focus:border-transparent outline-none" />
+                                </div>
+                              </div>
+                              {error && (
+                                <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
+                                  <DLogo size="sm" />
+                                  <span className="text-sm text-red-200">{error}</span>
+                                </div>
+                              )}
+                              <button
+                                onClick={onboardingStep === "ready" ? handleVerify : handleOnboardingValidate}
+                                className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-black font-black py-3 rounded-lg shadow-lg shadow-orange-500/10 hover:shadow-orange-500/30 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
+                              >
+                                <DLogo size="sm" active />
+                                {onboardingStep === "ready" ? "🚀 Start Analysis" : "Validate & Continue"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Ask Nova - Desktop */}
+                        {onboardingStep === "credentials" && (
+                          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
+                            <div className="flex gap-3 items-center">
+                              <DLogo size="sm" active />
+                              <input
+                                type="text"
+                                placeholder="Ask Dzera anything about AWS credentials, IAM, security..."
+                                className="flex-1 bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-[#FF9900] outline-none placeholder-gray-600"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                                    const q = (e.target as HTMLInputElement).value.trim();
+                                    (e.target as HTMLInputElement).value = '';
+                                    setOnboardingMessages(prev => [...prev, { role: "user", content: q }]);
+                                    setTimeout(async () => {
+                                      setOnboardingTyping(true);
+                                      try {
+                                        const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+                                        const apiUrl = isProduction ? 'https://8phpxwcke6.execute-api.us-west-2.amazonaws.com/prod/chat' : '/api/chat';
+                                        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: "user", content: q }] }) });
+                                        if (response.ok) {
+                                          const data = await response.json();
+                                          setOnboardingMessages(prev => [...prev, { role: "assistant", content: data.message || "Let me help with that!" }]);
+                                        }
+                                      } catch { /* silent */ }
+                                      setOnboardingTyping(false);
+                                    }, 100);
+                                  }
+                                }}
+                              />
+                              <span className="text-[10px] text-gray-600 flex-shrink-0 font-bold">Nova AI</span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Keep the IAM link for reference */}
+                    {onboardingStep !== "skipped" && (
+                      <div className="text-center">
+                        <a href="https://console.aws.amazon.com/iam" target="_blank" className="text-xs text-gray-500 hover:text-[#FF9900] transition-colors">
+                          Open AWS IAM Console →
                         </a>
-                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
+
+                {/* End of credentials.aws tab content */}
 
                 {activeTab === "scanner.config" && (
                   <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
