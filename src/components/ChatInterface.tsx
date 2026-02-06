@@ -75,7 +75,13 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
         content: msg.content,
       }));
 
-      const response = await fetch('/api/chat', {
+      // Use API Gateway endpoint in production (via CloudFront /prod/* proxy), local API route in development
+      const isProduction = typeof window !== 'undefined' && 
+        (window.location.hostname.includes('cloudfront.net') || 
+         window.location.hostname.includes('awsdzera.com'));
+      const apiUrl = isProduction ? '/prod/chat' : '/api/chat';
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

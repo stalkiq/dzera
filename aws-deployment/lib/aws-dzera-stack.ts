@@ -37,6 +37,18 @@ export class AwsDzeraStack extends cdk.Stack {
     });
     kmsKey.grantDecrypt(scanFunction);
 
+    // 2b. Lambda Function for Chat (Nova API)
+    const chatFunction = new lambda.Function(this, 'ChatFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/chat')),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        NOVA_API_KEY: process.env.NOVA_API_KEY || '',
+      },
+    });
+
     // 3. API Gateway REST API
     const api = new apigateway.RestApi(this, 'DzeraApi', {
       restApiName: 'AWS Dzera API',
@@ -51,6 +63,9 @@ export class AwsDzeraStack extends cdk.Stack {
 
     const scanResource = api.root.addResource('scan');
     scanResource.addMethod('POST', new apigateway.LambdaIntegration(scanFunction));
+
+    const chatResource = api.root.addResource('chat');
+    chatResource.addMethod('POST', new apigateway.LambdaIntegration(chatFunction));
 
     // 4. S3 Bucket for Frontend
     const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
