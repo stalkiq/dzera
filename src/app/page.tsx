@@ -866,7 +866,14 @@ export default function Home() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 120000);
 
-      const res = await fetch("/api/scan", {
+      // Use API Gateway directly in production, local API route in development
+      const isProduction = typeof window !== 'undefined' && 
+        !window.location.hostname.includes('localhost');
+      const scanUrl = isProduction 
+        ? 'https://8phpxwcke6.execute-api.us-west-2.amazonaws.com/prod/scan' 
+        : '/api/scan';
+
+      const res = await fetch(scanUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
