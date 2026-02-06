@@ -14,6 +14,7 @@
 - 🔒 **Secure** - Read-only access, encrypted credential handling, all processing happens securely
 - 🆓 **Free** - Completely free to use, no subscription fees
 - 🎨 **Modern UI** - Clean, matte grey interface with intuitive navigation
+- 🤖 **AI-Powered Chat** - Integrated with AWS Nova for intelligent cost optimization assistance
 
 ## 🚀 Quick Start
 
@@ -22,6 +23,7 @@
 - Node.js 18+ installed
 - AWS CLI configured (for local development)
 - AWS account with read-only IAM user credentials
+- AWS Nova API key (optional, for AI chat features) - Get yours at [nova.amazon.com/dev](https://nova.amazon.com/dev)
 
 ### Installation
 
@@ -38,6 +40,16 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Optional: Configure AWS Nova for AI Chat
+
+To enable the AI-powered chat assistant, create a `.env.local` file in the root directory:
+
+```bash
+NOVA_API_KEY=your_nova_api_key_here
+```
+
+Get your API key from [Amazon Nova Developer Portal](https://nova.amazon.com/dev). The chat will work without this, but will show demo responses instead of real AI assistance.
 
 ## 📖 Usage
 

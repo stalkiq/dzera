@@ -54,7 +54,7 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
   ]);
 
   const handleSendMessage = async () => {
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || isTyping) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -64,31 +64,57 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
     };
 
     setChatMessages(prev => [...prev, userMessage]);
+    const currentInput = chatInput;
     setChatInput("");
     setIsTyping(true);
 
-    // Simulate AI response delay
-    setTimeout(() => {
-      const responses = [
-        "That's a great question! Based on common AWS cost patterns, I'd recommend checking your EC2 instances first. Running instances 24/7 can quickly add up. Would you like me to help you identify which instances might be costing the most?",
-        "I can help you with that! Cost optimization often starts with understanding your usage patterns. Are you looking to optimize compute costs, storage costs, or data transfer costs specifically?",
-        "Excellent question! AWS costs can be tricky to understand. The most effective approach is usually to start with a comprehensive scan to see exactly what resources you're paying for. Have you tried running the scanner on the left?",
-        "That's a common concern! Many AWS users see unexpected cost increases. The key is identifying whether it's from new resources, increased usage, or forgotten resources. Would you like me to walk you through the most common cost drivers?",
-        "Great question! I'd be happy to help you understand that. AWS billing can be complex, but breaking it down by service usually makes it clearer. Are you seeing costs in a specific service like EC2, S3, or data transfer?"
-      ];
-      
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      
+    try {
+      // Prepare messages for API (excluding timestamps)
+      const apiMessages = [...chatMessages, userMessage].map(msg => ({
+        role: msg.type === "user" ? "user" : "assistant",
+        content: msg.content,
+      }));
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages: apiMessages }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "assistant",
-        content: randomResponse,
+        content: data.message,
         timestamp: new Date()
       };
 
       setChatMessages(prev => [...prev, assistantMessage]);
+    } catch (error: any) {
+      console.error('Chat error:', error);
+      
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: "assistant",
+        content: `I apologize, but I encountered an error: ${error.message || 'Failed to get response'}. Please make sure the Nova API key is configured. You can still use the demo responses by refreshing the page.`,
+        timestamp: new Date()
+      };
+
+      setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -160,7 +186,7 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
             className="w-full bg-transparent border-none text-white text-sm focus:outline-none resize-none px-2"
           />
           <div className="flex items-center justify-between mt-1 px-2">
-            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">GPT-4o MINI</span>
+            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Nova 2 Lite</span>
             <button
               onClick={handleSendMessage}
               disabled={!chatInput.trim() || isTyping}
