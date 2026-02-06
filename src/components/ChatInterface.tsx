@@ -75,11 +75,12 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
         content: msg.content,
       }));
 
-      // Use API Gateway endpoint in production (via CloudFront /prod/* proxy), local API route in development
+      // Use API Gateway endpoint directly in production, local API route in development
       const isProduction = typeof window !== 'undefined' && 
-        (window.location.hostname.includes('cloudfront.net') || 
-         window.location.hostname.includes('awsdzera.com'));
-      const apiUrl = isProduction ? '/prod/chat' : '/api/chat';
+        !window.location.hostname.includes('localhost');
+      const apiUrl = isProduction 
+        ? 'https://8phpxwcke6.execute-api.us-west-2.amazonaws.com/prod/chat' 
+        : '/api/chat';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
