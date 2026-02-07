@@ -590,6 +590,7 @@ export default function Home() {
   const [outputLogs, setOutputLogs] = useState<{msg: string, type: 'info' | 'warn' | 'error' | 'success'}[]>([]);
   const [debugLogs, setDebugLogs] = useState<{msg: string, type: 'info' | 'warn' | 'error' | 'success'}[]>([]);
   const [terminalPane, setTerminalPane] = useState<"terminal" | "output" | "debug">("terminal");
+  const [terminalOpen, setTerminalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [credentials, setCredentials] = useState({
     accessKeyId: "",
@@ -615,6 +616,7 @@ export default function Home() {
   // Core utility functions
   const addLog = useCallback((msg: string, type: 'info' | 'warn' | 'error' | 'success' = 'info') => {
     setLogs(prev => [...prev, { msg: `[${new Date().toLocaleTimeString()}] ${msg}`, type }]);
+    setTerminalOpen(true);
   }, []);
 
   const addOutputLog = useCallback((msg: string, type: 'info' | 'warn' | 'error' | 'success' = 'info') => {
@@ -2412,19 +2414,20 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Terminal Pane */}
-              <div className="h-48 bg-[#0d1117] border-t border-[#30363d] flex flex-col">
-                <div className="h-9 bg-[#161b22] flex items-center justify-between px-4 border-b border-[#30363d]">
+              {/* Terminal Pane — collapsible */}
+              <div className={`${terminalOpen ? "h-48" : "h-9"} bg-[#0d1117] border-t border-[#30363d] flex flex-col transition-all duration-200`}>
+                <div className="h-9 bg-[#161b22] flex items-center justify-between px-4 border-b border-[#30363d] shrink-0 cursor-pointer" onClick={() => setTerminalOpen(prev => !prev)}>
                   <div className="flex items-center gap-6 h-full">
                     <div 
-                      onClick={() => setTerminalPane("terminal")}
+                      onClick={(e) => { e.stopPropagation(); setTerminalPane("terminal"); setTerminalOpen(true); }}
                       className={`flex items-center gap-2 h-full px-1 cursor-pointer group transition-all ${terminalPane === "terminal" ? "border-b-2 border-[#FF9900]" : "hover:border-b-2 hover:border-gray-500"}`}
                     >
                       <DLogo size="xs" active={terminalPane === "terminal"} />
                       <span className={`text-[11px] font-bold uppercase tracking-wider ${terminalPane === "terminal" ? "text-gray-200" : "text-gray-500 group-hover:text-gray-300"}`}>Terminal</span>
+                      {!terminalOpen && logs.length > 0 && <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>}
                     </div>
                     <div 
-                      onClick={() => setTerminalPane("output")}
+                      onClick={(e) => { e.stopPropagation(); setTerminalPane("output"); setTerminalOpen(true); }}
                       className={`flex items-center gap-2 h-full px-1 cursor-pointer group transition-all ${terminalPane === "output" ? "border-b-2 border-[#FF9900]" : "hover:border-b-2 hover:border-gray-500"}`}
                     >
                       <DLogo size="xs" active={terminalPane === "output"} />
@@ -2432,7 +2435,7 @@ export default function Home() {
                       {outputLogs.length > 0 && <span className="w-1.5 h-1.5 bg-[#FF9900] rounded-full"></span>}
                     </div>
                     <div 
-                      onClick={() => setTerminalPane("debug")}
+                      onClick={(e) => { e.stopPropagation(); setTerminalPane("debug"); setTerminalOpen(true); }}
                       className={`flex items-center gap-2 h-full px-1 cursor-pointer group transition-all ${terminalPane === "debug" ? "border-b-2 border-[#FF9900]" : "hover:border-b-2 hover:border-gray-500"}`}
                     >
                       <DLogo size="xs" active={terminalPane === "debug"} />
@@ -2441,22 +2444,31 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button 
-                      onClick={() => {
-                        if (terminalPane === "terminal") setLogs([]);
-                        if (terminalPane === "output") setOutputLogs([]);
-                        if (terminalPane === "debug") setDebugLogs([]);
-                      }}
-                      className="text-[10px] text-gray-500 hover:text-gray-300 font-bold uppercase tracking-widest transition-colors flex items-center gap-1 active:scale-95"
-                    >
-                      <X className="w-3 h-3" /> Clear
+                    {terminalOpen && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (terminalPane === "terminal") setLogs([]);
+                          if (terminalPane === "output") setOutputLogs([]);
+                          if (terminalPane === "debug") setDebugLogs([]);
+                        }}
+                        className="text-[10px] text-gray-500 hover:text-gray-300 font-bold uppercase tracking-widest transition-colors flex items-center gap-1 active:scale-95"
+                      >
+                        <X className="w-3 h-3" /> Clear
+                      </button>
+                    )}
+                    <button onClick={(e) => { e.stopPropagation(); setTerminalOpen(prev => !prev); }} className="text-gray-500 hover:text-gray-300 transition-colors p-0.5">
+                      <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${terminalOpen ? "rotate-90" : "-rotate-90"}`} />
                     </button>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${terminalPane === "debug" ? "bg-blue-400" : "bg-green-500"}`}></div>
-                      <span className="text-[10px] text-gray-500 font-mono">{terminalPane === "terminal" ? "zsh" : terminalPane === "output" ? "output" : "debug"}</span>
-                    </div>
+                    {terminalOpen && (
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${terminalPane === "debug" ? "bg-blue-400" : "bg-green-500"}`}></div>
+                        <span className="text-[10px] text-gray-500 font-mono">{terminalPane === "terminal" ? "zsh" : terminalPane === "output" ? "output" : "debug"}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
+                {terminalOpen && (
                 <div className="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-1 scrollbar-thin scrollbar-thumb-[#30363d] bg-[#0d1117]">
                   {/* Terminal View */}
                   {terminalPane === "terminal" && (
@@ -2538,6 +2550,7 @@ export default function Home() {
                     </>
                   )}
                 </div>
+                )}
               </div>
             </div>
 
