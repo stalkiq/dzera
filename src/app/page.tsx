@@ -1169,7 +1169,7 @@ export default function Home() {
 
   if (step === "setup") {
     return (
-      <div className="min-h-[100dvh] bg-[#0b0f14] text-[#e5e7eb] px-2 sm:px-4 py-2 sm:py-6 pb-24 sm:pb-6">
+      <div className="min-h-[100dvh] bg-[#0b0f14] text-[#e5e7eb] px-2 sm:px-4 py-2 sm:py-3 pb-24 sm:pb-2 sm:overflow-hidden">
         <div className="max-w-[1600px] mx-auto space-y-3 sm:space-y-4">
           {/* Header - Mobile only (desktop uses Explorer panel instead) */}
           <div className="sm:hidden flex items-center justify-between px-1">
@@ -1711,7 +1711,7 @@ export default function Home() {
 
           {/* Desktop Layout */}
           <div className="hidden sm:block">
-            <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex flex-row h-[800px]">
+            <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex flex-row" style={{ height: 'calc(100vh - 130px)' }}>
             {/* Activity Bar - Hidden on mobile */}
             <div className="hidden sm:flex w-12 bg-[#0d1117] border-r border-[#30363d] flex-col items-center py-3 gap-2">
               <div className="group relative">
@@ -2825,7 +2825,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex h-[800px]">
+          <div className="bg-[#0d1117] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex" style={{ height: 'calc(100vh - 130px)' }}>
             {/* Activity Bar */}
             <div className="w-12 bg-[#0d1117] border-r border-[#30363d] flex flex-col items-center py-3 gap-2">
               <div className="group relative">
