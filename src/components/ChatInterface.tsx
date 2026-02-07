@@ -134,47 +134,47 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
   return (
     <div className={`bg-[#0d1117] flex flex-col h-full ${className}`}>
       {/* Chat Messages */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
         {chatMessages.map((message) => (
           <div
             key={message.id}
-            className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex gap-2 sm:gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
           >
             {message.type === "assistant" && (
-              <div className="w-7 h-7 bg-[#FF9900] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <Bot className="w-4 h-4 text-black" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 bg-[#FF9900] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black" />
               </div>
             )}
             <div
-              className={`max-w-xs lg:max-w-sm px-3 py-2 rounded-lg text-sm ${
+              className={`max-w-[85%] sm:max-w-xs lg:max-w-sm px-3 py-2 rounded-2xl text-[13px] sm:text-sm leading-relaxed ${
                 message.type === "user"
-                  ? "bg-[#FF9900] text-black ml-auto"
-                  : "bg-[#161b22] text-gray-200 border border-[#30363d]"
+                  ? "bg-[#FF9900] text-black ml-auto rounded-br-sm"
+                  : "bg-[#161b22] text-gray-200 border border-[#30363d] rounded-bl-sm"
               }`}
             >
-              <p className="whitespace-pre-wrap">{message.content}</p>
-              <p className={`text-[10px] mt-1 ${message.type === "user" ? "text-black/70" : "text-gray-500"}`}>
+              <p className="whitespace-pre-wrap break-words">{message.content}</p>
+              <p className={`text-[9px] sm:text-[10px] mt-1 ${message.type === "user" ? "text-black/60" : "text-gray-500"}`}>
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
             {message.type === "user" && (
-              <div className="w-7 h-7 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <User className="w-4 h-4 text-white" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
               </div>
             )}
           </div>
         ))}
         
         {isTyping && (
-          <div className="flex gap-3 justify-start">
-            <div className="w-7 h-7 bg-[#FF9900] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-              <Bot className="w-4 h-4 text-black" />
+          <div className="flex gap-2 sm:gap-3 justify-start">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 bg-[#FF9900] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black" />
             </div>
-            <div className="bg-[#161b22] text-gray-200 border border-[#30363d] px-3 py-2 rounded-lg text-sm">
-              <div className="flex space-x-1">
-                <div className="w-1.5 h-1.2 bg-gray-500 rounded-full animate-bounce"></div>
-                <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            <div className="bg-[#161b22] text-gray-200 border border-[#30363d] px-3 py-2.5 rounded-2xl rounded-bl-sm text-sm">
+              <div className="flex space-x-1.5">
+                <div className="w-1.5 h-1.5 bg-[#FF9900] rounded-full animate-bounce"></div>
+                <div className="w-1.5 h-1.5 bg-[#FF9900] rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></div>
+                <div className="w-1.5 h-1.5 bg-[#FF9900] rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
               </div>
             </div>
           </div>
@@ -182,24 +182,27 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
       </div>
 
       {/* Chat Input */}
-      <div className="p-4 bg-[#0d1117] border-t border-[#30363d]">
-        <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-2 focus-within:ring-1 focus-within:ring-[#FF9900]">
+      <div className="p-2 sm:p-4 bg-[#0d1117] border-t border-[#30363d]">
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-2 focus-within:ring-1 focus-within:ring-[#FF9900] focus-within:border-[#FF9900]">
           <textarea
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Ask anything..."
+            placeholder="Ask Dzera about AWS costs..."
             rows={2}
-            className="w-full bg-transparent border-none text-white text-sm focus:outline-none resize-none px-2"
+            className="w-full bg-transparent border-none text-white text-[13px] sm:text-sm focus:outline-none resize-none px-2"
           />
           <div className="flex items-center justify-between mt-1 px-2">
-            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Nova 2 Lite</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+              <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase font-bold tracking-wider">Nova 2 Lite</span>
+            </div>
             <button
               onClick={handleSendMessage}
               disabled={!chatInput.trim() || isTyping}
-              className="bg-[#FF9900] hover:bg-[#e68a00] disabled:bg-gray-700 text-black p-1.5 rounded transition-colors"
+              className="bg-[#FF9900] hover:bg-[#e68a00] disabled:bg-gray-700 disabled:text-gray-500 text-black p-2 sm:p-1.5 rounded-lg transition-colors active:scale-95"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             </button>
           </div>
         </div>

@@ -587,6 +587,9 @@ export default function Home() {
   const [openTabs, setOpenTabs] = useState(["credentials.aws"]);
   const [searchQuery, setSearchQuery] = useState("");
   const [logs, setLogs] = useState<{msg: string, type: 'info' | 'warn' | 'error' | 'success'}[]>([]);
+  const [outputLogs, setOutputLogs] = useState<{msg: string, type: 'info' | 'warn' | 'error' | 'success'}[]>([]);
+  const [debugLogs, setDebugLogs] = useState<{msg: string, type: 'info' | 'warn' | 'error' | 'success'}[]>([]);
+  const [terminalPane, setTerminalPane] = useState<"terminal" | "output" | "debug">("terminal");
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [credentials, setCredentials] = useState({
     accessKeyId: "",
@@ -608,6 +611,19 @@ export default function Home() {
   useEffect(() => {
     onboardingEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [onboardingMessages, onboardingTyping]);
+
+  // Core utility functions
+  const addLog = useCallback((msg: string, type: 'info' | 'warn' | 'error' | 'success' = 'info') => {
+    setLogs(prev => [...prev, { msg: `[${new Date().toLocaleTimeString()}] ${msg}`, type }]);
+  }, []);
+
+  const addOutputLog = useCallback((msg: string, type: 'info' | 'warn' | 'error' | 'success' = 'info') => {
+    setOutputLogs(prev => [...prev, { msg, type }]);
+  }, []);
+
+  const addDebugLog = useCallback((msg: string, type: 'info' | 'warn' | 'error' | 'success' = 'info') => {
+    setDebugLogs(prev => [...prev, { msg: `[${new Date().toISOString()}] ${msg}`, type }]);
+  }, []);
 
   // Smart Onboarding handler
   const handleOnboardingChoice = useCallback(async (choice: string) => {
@@ -669,11 +685,15 @@ export default function Home() {
         const apiUrl = isProduction 
           ? 'https://8phpxwcke6.execute-api.us-west-2.amazonaws.com/prod/chat' 
           : '/api/chat';
+        addDebugLog(`NOVA_ONBOARDING: POST ${apiUrl}`, "info");
+        addDebugLog(`NOVA_ONBOARDING: User query: "${choice.substring(0, 80)}..."`, "info");
+        const novaStart = Date.now();
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messages: [{ role: "user", content: choice }] }),
         });
+        addDebugLog(`NOVA_ONBOARDING: Response ${response.status} (${Date.now() - novaStart}ms)`, response.ok ? "success" : "error");
         if (response.ok) {
           const data = await response.json();
           setOnboardingMessages(prev => [...prev, {
@@ -681,12 +701,14 @@ export default function Home() {
             content: data.message || "I can help with that! Please make sure you have an IAM user with ReadOnlyAccess.",
           }]);
         } else {
+          addDebugLog(`NOVA_ONBOARDING: Non-OK response, using fallback`, "warn");
           setOnboardingMessages(prev => [...prev, {
             role: "assistant",
             content: "To create credentials: Go to **IAM Console** → **Users** → **Create user** → attach `ReadOnlyAccess` → **Security credentials** → **Create access key**. Copy both keys and paste them in the fields below.",
           }]);
         }
-      } catch {
+      } catch (err: any) {
+        addDebugLog(`NOVA_ONBOARDING: Error: ${err?.message || 'Unknown error'}`, "error");
         setOnboardingMessages(prev => [...prev, {
           role: "assistant",
           content: "To create credentials: Go to **IAM Console** → **Users** → **Create user** → attach `ReadOnlyAccess` → **Security credentials** → **Create access key**. Copy both keys and paste them in the fields below.",
@@ -698,7 +720,7 @@ export default function Home() {
     }
 
     setOnboardingTyping(false);
-  }, [onboardingStep]);
+  }, [onboardingStep, addDebugLog]);
 
   // Handle credential validation in onboarding
   const handleOnboardingValidate = useCallback(() => {
@@ -768,11 +790,6 @@ export default function Home() {
       searchInputRef.current.focus();
     }
   }, [showCommandPalette]);
-
-  // Core utility functions
-  const addLog = useCallback((msg: string, type: 'info' | 'warn' | 'error' | 'success' = 'info') => {
-    setLogs(prev => [...prev, { msg: `[${new Date().toLocaleTimeString()}] ${msg}`, type }]);
-  }, []);
 
   const handleTabClick = useCallback((tabId: string) => {
     if (!openTabs.includes(tabId)) {
@@ -987,8 +1004,15 @@ export default function Home() {
     setStep("scanning");
     setError(null);
     setLogs([]);
+    setOutputLogs([]);
+    setDebugLogs([]);
+    setTerminalPane("terminal");
     addLog("Initializing infrastructure analysis...", "info");
     addLog("Validating credentials...", "info");
+    addDebugLog("SCAN_START: Initializing scan pipeline", "info");
+    addDebugLog(`ENV: ${typeof window !== 'undefined' ? window.location.hostname : 'unknown'}`, "info");
+    addDebugLog(`CREDENTIALS: AccessKeyId=${credentials.accessKeyId.substring(0, 8)}...${credentials.accessKeyId.slice(-4)} (${credentials.accessKeyId.length} chars)`, "info");
+    addDebugLog(`CREDENTIALS: SecretAccessKey=****...${credentials.secretAccessKey.slice(-4)} (${credentials.secretAccessKey.length} chars)`, "info");
 
     try {
       const logSequence = [
@@ -1006,6 +1030,7 @@ export default function Home() {
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 120000);
+      addDebugLog("TIMEOUT: AbortController set to 120000ms", "info");
 
       // Use API Gateway directly in production, local API route in development
       const isProduction = typeof window !== 'undefined' && 
@@ -1013,6 +1038,10 @@ export default function Home() {
       const scanUrl = isProduction 
         ? 'https://8phpxwcke6.execute-api.us-west-2.amazonaws.com/prod/scan' 
         : '/api/scan';
+
+      addDebugLog(`HTTP_REQUEST: POST ${scanUrl}`, "info");
+      addDebugLog(`HEADERS: Content-Type: application/json`, "info");
+      const fetchStart = Date.now();
 
       const res = await fetch(scanUrl, {
         method: "POST",
@@ -1022,15 +1051,67 @@ export default function Home() {
       });
 
       clearTimeout(timeoutId);
+      const fetchDuration = Date.now() - fetchStart;
+      addDebugLog(`HTTP_RESPONSE: ${res.status} ${res.statusText} (${fetchDuration}ms)`, res.ok ? "success" : "error");
+      addDebugLog(`RESPONSE_HEADERS: content-type=${res.headers.get('content-type')}`, "info");
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
+        addDebugLog(`ERROR_BODY: ${JSON.stringify(body)}`, "error");
         throw new Error(body.error || body.message || `Analysis failed with status ${res.status}`);
       }
 
       const data = (await res.json()) as ScanResult;
+      addDebugLog(`PARSE: Response parsed successfully`, "success");
+      addDebugLog(`FINDINGS: ${data.findings.length} items, total cost: $${data.totalEstimatedMonthlyCost?.toFixed(2)}/mo`, "success");
       addLog(`Analysis complete. Identified ${data.findings.length} optimization opportunities.`, "success");
       
+      // Populate Output pane with structured results
+      addOutputLog("╔══════════════════════════════════════════════╗", "info");
+      addOutputLog("║        AWS DZERA — SCAN RESULTS SUMMARY        ║", "info");
+      addOutputLog("╚══════════════════════════════════════════════╝", "info");
+      addOutputLog("", "info");
+      addOutputLog(`Scan started:  ${data.startedAt}`, "info");
+      addOutputLog(`Scan finished: ${data.finishedAt}`, "info");
+      addOutputLog(`Total findings: ${data.findings.length}`, "info");
+      addOutputLog(`Estimated monthly cost: $${data.totalEstimatedMonthlyCost?.toFixed(2)}`, "warn");
+      addOutputLog(`Estimated hourly cost:  $${data.totalEstimatedHourlyCost?.toFixed(2)}`, "info");
+      addOutputLog("", "info");
+
+      const critical = data.findings.filter((f: CostFinding) => f.severity === "critical");
+      const warnings = data.findings.filter((f: CostFinding) => f.severity === "warning");
+      const infos = data.findings.filter((f: CostFinding) => f.severity === "info");
+
+      if (critical.length > 0) {
+        addOutputLog(`── CRITICAL (${critical.length}) ────────────────────────`, "error");
+        critical.forEach((f: CostFinding) => {
+          addOutputLog(`  ✗ ${f.title}`, "error");
+          addOutputLog(`    ${f.service} | ${f.resourceId} | ${f.region} | ~$${f.estimatedMonthlyCost?.toFixed(2)}/mo`, "error");
+          addOutputLog(`    → ${f.suggestion}`, "info");
+        });
+        addOutputLog("", "info");
+      }
+      if (warnings.length > 0) {
+        addOutputLog(`── WARNING (${warnings.length}) ─────────────────────────`, "warn");
+        warnings.forEach((f: CostFinding) => {
+          addOutputLog(`  ⚠ ${f.title}`, "warn");
+          addOutputLog(`    ${f.service} | ${f.resourceId} | ${f.region} | ~$${f.estimatedMonthlyCost?.toFixed(2)}/mo`, "warn");
+          addOutputLog(`    → ${f.suggestion}`, "info");
+        });
+        addOutputLog("", "info");
+      }
+      if (infos.length > 0) {
+        addOutputLog(`── INFO (${infos.length}) ────────────────────────────`, "info");
+        infos.forEach((f: CostFinding) => {
+          addOutputLog(`  ℹ ${f.title}`, "info");
+          addOutputLog(`    ${f.service} | ${f.resourceId} | ${f.region} | ~$${f.estimatedMonthlyCost?.toFixed(2)}/mo`, "info");
+          addOutputLog(`    → ${f.suggestion}`, "info");
+        });
+      }
+      addOutputLog("", "info");
+      addOutputLog("════════════════════════════════════════════════", "info");
+      addOutputLog("End of scan output. Switch to Terminal for activity logs.", "info");
+
       setTimeout(() => {
         setResult(data);
         setStep("results");
@@ -1038,8 +1119,16 @@ export default function Home() {
 
     } catch (e: any) {
       addLog(`Error: ${e.message}`, "error");
+      addDebugLog(`SCAN_ERROR: ${e.name}: ${e.message}`, "error");
+      addDebugLog(`STACK: ${e.stack?.split('\n').slice(0, 3).join(' | ')}`, "error");
+      addOutputLog("╔══════════════════════════════════════════════╗", "error");
+      addOutputLog("║            SCAN FAILED                         ║", "error");
+      addOutputLog("╚══════════════════════════════════════════════╝", "error");
+      addOutputLog(`Error: ${e.message}`, "error");
+      addOutputLog("Check the Debug tab for detailed error information.", "info");
       if (e.name === "AbortError") {
         setError("Analysis timed out. Please verify your credentials and retry.");
+        addDebugLog("ABORT: Request aborted after 120000ms timeout", "error");
       } else {
         setError(e.message || "Analysis failed. Verify your credentials and IAM permissions.");
       }
@@ -1078,61 +1167,61 @@ export default function Home() {
 
   if (step === "setup") {
     return (
-      <div className="min-h-screen bg-[#0b0f14] text-[#e5e7eb] px-2 sm:px-4 py-3 sm:py-6 pb-20 sm:pb-6">
+      <div className="min-h-[100dvh] bg-[#0b0f14] text-[#e5e7eb] px-2 sm:px-4 py-2 sm:py-6 pb-24 sm:pb-6">
         <div className="max-w-[1600px] mx-auto space-y-3 sm:space-y-4">
-          {/* Header - Simplified for mobile */}
-          <div className="flex items-center justify-between px-1 sm:px-2">
-            <div className="flex items-center gap-2 sm:gap-3">
+          {/* Header - Mobile only (desktop uses Explorer panel instead) */}
+          <div className="sm:hidden flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
               <DLogo size="md" active />
               <div>
-                <h1 className="text-base sm:text-lg font-bold text-white leading-none tracking-tight">AWS Dzera</h1>
-                <p className="text-[#FF9900] text-[7px] sm:text-[8px] font-bold uppercase tracking-widest">Workspace</p>
+                <h1 className="text-base font-bold text-white leading-none tracking-tight">AWS Dzera</h1>
+                <p className="text-[#FF9900] text-[7px] font-bold uppercase tracking-widest">Workspace</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Mobile status indicator */}
-              <div className="sm:hidden flex items-center gap-1.5 bg-[#161b22] px-2 py-1 rounded border border-[#30363d]">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-[10px] text-gray-400">Ready</span>
-              </div>
-              {/* Desktop status */}
-              <div className="hidden sm:flex items-center gap-2 bg-[#161b22] px-3 py-1.5 rounded-md border border-[#30363d]">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium text-gray-400">Connected</span>
-              </div>
+            <div className="flex items-center gap-1.5 bg-[#161b22] px-2 py-1 rounded border border-[#30363d]">
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-[10px] text-gray-400">Ready</span>
             </div>
           </div>
 
-          {/* Mobile Bottom Navigation */}
-          <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#0d1117] border-t border-[#30363d] px-2 py-2 z-50">
+          {/* Mobile Bottom Navigation — safe area for notched phones */}
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#0d1117]/95 backdrop-blur-lg border-t border-[#30363d] px-2 pt-1.5 z-50" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
             <div className="flex justify-around items-center max-w-md mx-auto">
               <button 
                 onClick={() => setMobileView("scan")}
-                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-colors ${mobileView === "scan" ? "bg-[#FF9900]/20 text-[#FF9900]" : "text-gray-400"}`}
+                className={`flex flex-col items-center gap-0.5 min-w-[56px] py-1.5 rounded-xl transition-all active:scale-95 ${mobileView === "scan" ? "bg-[#FF9900]/15 text-[#FF9900]" : "text-gray-500"}`}
               >
                 <ThemedIcon variant="key" size="sm" active={mobileView === "scan"} />
-                <span className="text-[10px] font-medium">Scan</span>
+                <span className="text-[9px] font-semibold">Scan</span>
               </button>
               <button 
                 onClick={() => { setMobileView("services"); handleTabClick("aws-services.json"); }}
-                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-colors ${mobileView === "services" ? "bg-[#FF9900]/20 text-[#FF9900]" : "text-gray-400"}`}
+                className={`flex flex-col items-center gap-0.5 min-w-[56px] py-1.5 rounded-xl transition-all active:scale-95 ${mobileView === "services" || mobileView === "details" ? "bg-[#FF9900]/15 text-[#FF9900]" : "text-gray-500"}`}
               >
-                <ThemedIcon variant="grid" size="sm" active={mobileView === "services"} />
-                <span className="text-[10px] font-medium">Services</span>
+                <ThemedIcon variant="grid" size="sm" active={mobileView === "services" || mobileView === "details"} />
+                <span className="text-[9px] font-semibold">Services</span>
               </button>
               <button 
                 onClick={() => setMobileView("chat")}
-                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-colors ${mobileView === "chat" ? "bg-[#FF9900]/20 text-[#FF9900]" : "text-gray-400"}`}
+                className={`flex flex-col items-center gap-0.5 min-w-[56px] py-1.5 rounded-xl transition-all active:scale-95 relative ${mobileView === "chat" ? "bg-[#FF9900]/15 text-[#FF9900]" : "text-gray-500"}`}
               >
-                <ThemedIcon variant="d" size="sm" active={mobileView === "chat"} />
-                <span className="text-[10px] font-medium">Chat</span>
+                <div className="relative">
+                  <ThemedIcon variant="d" size="sm" active={mobileView === "chat"} />
+                  <div className="absolute -top-0.5 -right-1 w-2 h-2 bg-green-500 rounded-full border border-[#0d1117]"></div>
+                </div>
+                <span className="text-[9px] font-semibold">Nova AI</span>
               </button>
               <button 
                 onClick={() => setMobileView("terminal")}
-                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-colors ${mobileView === "terminal" ? "bg-[#FF9900]/20 text-[#FF9900]" : "text-gray-400"}`}
+                className={`flex flex-col items-center gap-0.5 min-w-[56px] py-1.5 rounded-xl transition-all active:scale-95 relative ${mobileView === "terminal" ? "bg-[#FF9900]/15 text-[#FF9900]" : "text-gray-500"}`}
               >
-                <ThemedIcon variant="terminal" size="sm" active={mobileView === "terminal"} />
-                <span className="text-[10px] font-medium">Logs</span>
+                <div className="relative">
+                  <ThemedIcon variant="terminal" size="sm" active={mobileView === "terminal"} />
+                  {(logs.length > 0 || outputLogs.length > 0 || debugLogs.length > 0) && (
+                    <div className="absolute -top-0.5 -right-1 w-2 h-2 bg-blue-400 rounded-full border border-[#0d1117]"></div>
+                  )}
+                </div>
+                <span className="text-[9px] font-semibold">Logs</span>
               </button>
             </div>
           </div>
@@ -1141,7 +1230,7 @@ export default function Home() {
           <div className="sm:hidden">
             {/* Scan View */}
             {mobileView === "scan" && (
-              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 160px)' }}>
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100dvh - 170px)' }}>
                 {/* Onboarding Header */}
                 <div className="h-10 bg-[#161b22] flex items-center justify-between border-b border-[#30363d] px-3">
                   <div className="flex items-center gap-2">
@@ -1322,40 +1411,43 @@ export default function Home() {
 
             {/* Services View */}
             {mobileView === "services" && (
-              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <ThemedIcon variant="grid" size="sm" active />
-                    AWS Services
-                  </h2>
-                  <button onClick={() => setShowCommandPalette(true)} className="text-gray-400 hover:text-[#FF9900] p-1.5 bg-[#161b22] rounded-lg border border-[#30363d]">
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100dvh - 170px)' }}>
+                <div className="h-10 bg-[#161b22] flex items-center justify-between border-b border-[#30363d] px-3 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <ThemedIcon variant="grid" size="xs" active />
+                    <span className="text-xs font-bold text-white">AWS Services</span>
+                    <span className="text-[9px] bg-[#161b22] text-gray-500 px-1.5 py-0.5 rounded border border-[#30363d]">{Object.keys(serviceDescriptions).length}</span>
+                  </div>
+                  <button onClick={() => setShowCommandPalette(true)} className="text-gray-400 hover:text-[#FF9900] p-1 active:scale-95">
                     <ThemedIcon variant="search" size="sm" />
                   </button>
                 </div>
-                
-                <input 
-                  type="text"
-                  placeholder="Filter services..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-[#FF9900] outline-none"
-                />
 
-                <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                <div className="p-3 h-[calc(100%-40px)] overflow-y-auto space-y-3">
+                  <input 
+                    type="text"
+                    placeholder="Filter services..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2.5 text-sm text-white focus:ring-1 focus:ring-[#FF9900] focus:border-[#FF9900] outline-none"
+                  />
+
                   {[
-                    { cat: "Compute", items: ["EC2", "Lambda", "Lightsail", "Fargate"] },
-                    { cat: "Storage", items: ["S3", "EBS", "EFS", "Glacier"] },
-                    { cat: "Database", items: ["RDS", "DynamoDB", "Aurora", "ElastiCache"] },
-                    { cat: "Network", items: ["VPC", "CloudFront", "NAT Gateway", "API Gateway"] },
+                    { cat: "Compute", items: ["EC2", "Lambda", "Lightsail", "Fargate", "ECS", "EKS"] },
+                    { cat: "Storage", items: ["S3", "EBS", "EFS", "Glacier", "ECR"] },
+                    { cat: "Database", items: ["RDS", "DynamoDB", "Aurora", "ElastiCache", "Redshift"] },
+                    { cat: "Network", items: ["VPC", "CloudFront", "NAT Gateway", "API Gateway", "Elastic IP"] },
+                    { cat: "AI & ML", items: ["SageMaker", "Bedrock", "Comprehend", "Rekognition"] },
+                    { cat: "Management", items: ["CloudWatch", "CloudTrail", "Config", "Trusted Advisor"] },
                   ].filter(g => g.items.some(i => i.toLowerCase().includes(searchQuery.toLowerCase()))).map(group => (
                     <div key={group.cat} className="bg-[#161b22] rounded-lg p-3 border border-[#30363d]">
-                      <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">{group.cat}</h3>
+                      <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">{group.cat}</h3>
                       <div className="flex flex-wrap gap-1.5">
                         {group.items.filter(i => i.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
                           <button
                             key={item}
                             onClick={() => handleServiceClick(item)}
-                            className="bg-[#0d1117] text-gray-300 text-xs px-2.5 py-1.5 rounded border border-[#30363d] hover:border-[#FF9900]/50 hover:text-[#FF9900] transition-colors"
+                            className="bg-[#0d1117] text-gray-300 text-xs px-3 py-2 rounded-lg border border-[#30363d] hover:border-[#FF9900]/50 hover:text-[#FF9900] transition-colors active:scale-95 active:bg-[#FF9900]/10"
                           >
                             {item}
                           </button>
@@ -1367,40 +1459,134 @@ export default function Home() {
               </div>
             )}
 
-            {/* Chat View */}
+            {/* Chat View — Nova AI */}
             {mobileView === "chat" && (
-              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 180px)' }}>
-                <div className="h-10 bg-[#161b22] flex items-center border-b border-[#30363d] px-3">
-                  <span className="text-xs font-bold text-gray-400">Dzera Assistant</span>
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden flex flex-col" style={{ height: 'calc(100dvh - 170px)' }}>
+                <div className="h-10 bg-[#161b22] flex items-center justify-between border-b border-[#30363d] px-3 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 bg-[#FF9900] rounded-full flex items-center justify-center">
+                      <span className="text-[8px] font-black text-black">D</span>
+                    </div>
+                    <span className="text-xs font-bold text-white">Dzera Assistant</span>
+                    <span className="text-[9px] bg-[#FF9900]/20 text-[#FF9900] px-1.5 py-0.5 rounded font-bold">Nova AI</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span className="text-[9px] text-gray-500">Online</span>
+                  </div>
                 </div>
-                <ChatInterface />
+                <div className="flex-1 min-h-0">
+                  <ChatInterface className="h-full border-l-0" />
+                </div>
               </div>
             )}
 
-            {/* Terminal View */}
+            {/* Terminal View — with Output/Debug tabs */}
             {mobileView === "terminal" && (
-              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 180px)' }}>
-                <div className="h-10 bg-[#161b22] flex items-center justify-between border-b border-[#30363d] px-3">
-                  <div className="flex items-center gap-2">
-                    <ThemedIcon variant="terminal" size="xs" active />
-                    <span className="text-xs font-bold text-gray-400">Terminal</span>
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100dvh - 170px)' }}>
+                {/* Tab bar */}
+                <div className="h-10 bg-[#161b22] flex items-center justify-between border-b border-[#30363d] px-2">
+                  <div className="flex items-center gap-1 h-full overflow-x-auto no-scrollbar">
+                    <button 
+                      onClick={() => setTerminalPane("terminal")}
+                      className={`flex items-center gap-1.5 h-full px-2.5 transition-all shrink-0 ${terminalPane === "terminal" ? "border-b-2 border-[#FF9900] text-gray-200" : "text-gray-500"}`}
+                    >
+                      <ThemedIcon variant="terminal" size="xs" active={terminalPane === "terminal"} />
+                      <span className="text-[11px] font-bold">Terminal</span>
+                    </button>
+                    <button 
+                      onClick={() => setTerminalPane("output")}
+                      className={`flex items-center gap-1.5 h-full px-2.5 transition-all shrink-0 ${terminalPane === "output" ? "border-b-2 border-[#FF9900] text-gray-200" : "text-gray-500"}`}
+                    >
+                      <DLogo size="xs" active={terminalPane === "output"} />
+                      <span className="text-[11px] font-bold">Output</span>
+                      {outputLogs.length > 0 && <span className="w-1.5 h-1.5 bg-[#FF9900] rounded-full"></span>}
+                    </button>
+                    <button 
+                      onClick={() => setTerminalPane("debug")}
+                      className={`flex items-center gap-1.5 h-full px-2.5 transition-all shrink-0 ${terminalPane === "debug" ? "border-b-2 border-[#FF9900] text-gray-200" : "text-gray-500"}`}
+                    >
+                      <DLogo size="xs" active={terminalPane === "debug"} />
+                      <span className="text-[11px] font-bold">Debug</span>
+                      {debugLogs.length > 0 && <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>}
+                    </button>
                   </div>
-                  <button onClick={() => setLogs([])} className="text-[10px] text-gray-500 hover:text-white">Clear</button>
+                  <button 
+                    onClick={() => {
+                      if (terminalPane === "terminal") setLogs([]);
+                      if (terminalPane === "output") setOutputLogs([]);
+                      if (terminalPane === "debug") setDebugLogs([]);
+                    }}
+                    className="text-[10px] text-gray-500 hover:text-white shrink-0 ml-2"
+                  >
+                    Clear
+                  </button>
                 </div>
+                {/* Terminal content */}
                 <div className="p-3 h-[calc(100%-40px)] overflow-y-auto font-mono text-xs space-y-1">
-                  {logs.length === 0 ? (
-                    <p className="text-gray-500">Awaiting analysis initialization...</p>
-                  ) : (
-                    logs.map((log, idx) => (
-                      <div key={idx} className={`flex items-start gap-2 ${
-                        log.type === 'error' ? 'text-red-400' : 
-                        log.type === 'warn' ? 'text-yellow-400' : 
-                        log.type === 'success' ? 'text-green-400' : 'text-gray-300'
-                      }`}>
-                        <span className="text-gray-600 shrink-0">[{new Date().toLocaleTimeString()}]</span>
-                        <span>{log.msg}</span>
-                      </div>
-                    ))
+                  {terminalPane === "terminal" && (
+                    <>
+                      {logs.length === 0 ? (
+                        <p className="text-gray-500 italic">Awaiting analysis initialization...</p>
+                      ) : (
+                        logs.map((log, idx) => (
+                          <div key={idx} className={`flex items-start gap-2 ${
+                            log.type === 'error' ? 'text-red-400' : 
+                            log.type === 'warn' ? 'text-yellow-400' : 
+                            log.type === 'success' ? 'text-green-400' : 'text-gray-300'
+                          }`}>
+                            <span className="text-gray-600 shrink-0">›</span>
+                            <span className="break-all">{log.msg}</span>
+                          </div>
+                        ))
+                      )}
+                      {(step as string) === "scanning" && (
+                        <div className="flex items-start gap-2 animate-pulse">
+                          <span className="text-gray-600 shrink-0">›</span>
+                          <span className="text-[#FF9900]">Analyzing infrastructure...</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {terminalPane === "output" && (
+                    <>
+                      {outputLogs.length === 0 ? (
+                        <div className="text-gray-600 italic space-y-2">
+                          <p>No scan output yet.</p>
+                          <p className="text-gray-700 text-[10px]">Run an infrastructure analysis to see structured results here.</p>
+                        </div>
+                      ) : (
+                        outputLogs.map((log, idx) => (
+                          <div key={idx} className={`${
+                            log.type === 'error' ? 'text-red-400' : 
+                            log.type === 'warn' ? 'text-yellow-400' : 
+                            log.type === 'success' ? 'text-green-400' : 'text-gray-300'
+                          }`} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                            {log.msg}
+                          </div>
+                        ))
+                      )}
+                    </>
+                  )}
+                  {terminalPane === "debug" && (
+                    <>
+                      {debugLogs.length === 0 ? (
+                        <div className="text-gray-600 italic space-y-2">
+                          <p>Debug console ready.</p>
+                          <p className="text-gray-700 text-[10px]">API calls, timing, and error traces will appear here during scan and chat operations.</p>
+                        </div>
+                      ) : (
+                        debugLogs.map((log, idx) => (
+                          <div key={idx} className={`${
+                            log.type === 'error' ? 'text-red-400' : 
+                            log.type === 'warn' ? 'text-yellow-400' : 
+                            log.type === 'success' ? 'text-green-400' : 'text-purple-300'
+                          }`} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                            {log.msg}
+                          </div>
+                        ))
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -1408,7 +1594,7 @@ export default function Home() {
 
             {/* Service Details View */}
             {mobileView === "details" && activeTab.endsWith('.md') && (
-              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 180px)' }}>
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg overflow-hidden" style={{ height: 'calc(100dvh - 170px)' }}>
                 <div className="h-12 bg-[#161b22] flex items-center justify-between border-b border-[#30363d] px-3">
                   <div className="flex items-center gap-2">
                     <DLogo size="sm" active />
@@ -1457,34 +1643,47 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {/* Optimization Actions */}
+                        {/* Quick Actions */}
                         <div className="space-y-2">
                           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Quick Actions</h3>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-3 gap-2">
                             <a 
                               href={`https://console.aws.amazon.com/${serviceName.toLowerCase().replace(/\s+/g, '')}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 text-center hover:border-[#FF9900]/50 transition-colors"
+                              className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 text-center hover:border-[#FF9900]/50 transition-colors active:scale-95"
                             >
                               <ThemedIcon variant="d" size="sm" active />
-                              <p className="text-xs text-gray-400 mt-1">AWS Console</p>
+                              <p className="text-[10px] text-gray-400 mt-1">Console</p>
                             </a>
                             <button 
                               onClick={() => {
                                 addLog(`Deep scan initiated for ${serviceName}...`, "info");
                                 setMobileView("terminal");
                               }}
-                              className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 text-center hover:border-[#FF9900]/50 transition-colors"
+                              className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 text-center hover:border-[#FF9900]/50 transition-colors active:scale-95"
                             >
                               <ThemedIcon variant="terminal" size="sm" active />
-                              <p className="text-xs text-gray-400 mt-1">Deep Scan</p>
+                              <p className="text-[10px] text-gray-400 mt-1">Scan</p>
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setMobileView("chat");
+                              }}
+                              className="bg-[#FF9900]/10 border border-[#FF9900]/30 rounded-lg p-3 text-center hover:bg-[#FF9900]/20 transition-colors active:scale-95"
+                            >
+                              <div className="flex justify-center">
+                                <div className="w-5 h-5 bg-[#FF9900] rounded-full flex items-center justify-center">
+                                  <span className="text-[8px] font-black text-black">D</span>
+                                </div>
+                              </div>
+                              <p className="text-[10px] text-[#FF9900] mt-1 font-semibold">Ask Nova</p>
                             </button>
                           </div>
                         </div>
 
                         {/* Recommendation */}
-                        <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3">
+                        <div className="bg-gradient-to-r from-[#161b22] to-[#0d1117] border border-[#30363d] rounded-lg p-3">
                           <h3 className="text-xs font-bold text-[#FF9900] mb-2 flex items-center gap-2">
                             <DLogo size="xs" active />
                             Recommendation
@@ -1493,6 +1692,12 @@ export default function Home() {
                             For comprehensive {serviceName} cost optimization, run a full infrastructure analysis using your AWS credentials. 
                             This will identify specific resources, their costs, and actionable savings opportunities.
                           </p>
+                          <button 
+                            onClick={() => setMobileView("scan")}
+                            className="mt-2 w-full bg-[#FF9900]/10 border border-[#FF9900]/30 text-[#FF9900] text-xs font-bold py-2 rounded-lg hover:bg-[#FF9900]/20 transition-colors active:scale-[0.98]"
+                          >
+                            → Start Infrastructure Analysis
+                          </button>
                         </div>
                       </>
                     );
@@ -1565,8 +1770,14 @@ export default function Home() {
 
             {/* Side Bar (Explorer) */}
             <div className="hidden md:flex w-64 bg-[#0d1117] border-r border-[#30363d] flex-col">
-              <div className="px-4 py-3 flex items-center justify-between border-b border-[#30363d]/50">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Explorer</span>
+              <div className="px-4 py-2.5 flex items-center justify-between border-b border-[#30363d]/50">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Explorer</span>
+                  <div className="flex items-center gap-1.5 bg-[#161b22] px-2 py-0.5 rounded border border-[#30363d]">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-[10px] font-medium text-gray-400">Connected</span>
+                  </div>
+                </div>
                 <div className="flex items-center gap-2">
                   <div onClick={() => handleTabClick("credentials.aws")} className="cursor-pointer"><ThemedIcon variant="files" size="xs" /></div>
                   <div onClick={() => { addLog("Refreshing workspace...", "info"); window.location.reload(); }} className="cursor-pointer"><ThemedIcon variant="refresh" size="xs" /></div>
@@ -2205,56 +2416,126 @@ export default function Home() {
               <div className="h-48 bg-[#0d1117] border-t border-[#30363d] flex flex-col">
                 <div className="h-9 bg-[#161b22] flex items-center justify-between px-4 border-b border-[#30363d]">
                   <div className="flex items-center gap-6 h-full">
-                    <div className="flex items-center gap-2 border-b-2 border-[#FF9900] h-full px-1 cursor-pointer group">
-                      <DLogo size="xs" active />
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-200">Terminal</span>
+                    <div 
+                      onClick={() => setTerminalPane("terminal")}
+                      className={`flex items-center gap-2 h-full px-1 cursor-pointer group transition-all ${terminalPane === "terminal" ? "border-b-2 border-[#FF9900]" : "hover:border-b-2 hover:border-gray-500"}`}
+                    >
+                      <DLogo size="xs" active={terminalPane === "terminal"} />
+                      <span className={`text-[11px] font-bold uppercase tracking-wider ${terminalPane === "terminal" ? "text-gray-200" : "text-gray-500 group-hover:text-gray-300"}`}>Terminal</span>
                     </div>
-                    <div className="flex items-center gap-2 h-full px-1 cursor-pointer group hover:border-b-2 hover:border-gray-500 transition-all" onClick={() => handleTabClick("cost-reports.md")}>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 group-hover:text-gray-300">Output</span>
+                    <div 
+                      onClick={() => setTerminalPane("output")}
+                      className={`flex items-center gap-2 h-full px-1 cursor-pointer group transition-all ${terminalPane === "output" ? "border-b-2 border-[#FF9900]" : "hover:border-b-2 hover:border-gray-500"}`}
+                    >
+                      <DLogo size="xs" active={terminalPane === "output"} />
+                      <span className={`text-[11px] font-bold uppercase tracking-wider ${terminalPane === "output" ? "text-gray-200" : "text-gray-500 group-hover:text-gray-300"}`}>Output</span>
+                      {outputLogs.length > 0 && <span className="w-1.5 h-1.5 bg-[#FF9900] rounded-full"></span>}
                     </div>
-                    <div className="flex items-center gap-2 h-full px-1 cursor-pointer group hover:border-b-2 hover:border-gray-500 transition-all" onClick={() => handleTabClick("scanner.config")}>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 group-hover:text-gray-300">Debug</span>
+                    <div 
+                      onClick={() => setTerminalPane("debug")}
+                      className={`flex items-center gap-2 h-full px-1 cursor-pointer group transition-all ${terminalPane === "debug" ? "border-b-2 border-[#FF9900]" : "hover:border-b-2 hover:border-gray-500"}`}
+                    >
+                      <DLogo size="xs" active={terminalPane === "debug"} />
+                      <span className={`text-[11px] font-bold uppercase tracking-wider ${terminalPane === "debug" ? "text-gray-200" : "text-gray-500 group-hover:text-gray-300"}`}>Debug</span>
+                      {debugLogs.length > 0 && <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <button 
-                      onClick={() => setLogs([])}
+                      onClick={() => {
+                        if (terminalPane === "terminal") setLogs([]);
+                        if (terminalPane === "output") setOutputLogs([]);
+                        if (terminalPane === "debug") setDebugLogs([]);
+                      }}
                       className="text-[10px] text-gray-500 hover:text-gray-300 font-bold uppercase tracking-widest transition-colors flex items-center gap-1 active:scale-95"
                     >
                       <X className="w-3 h-3" /> Clear
                     </button>
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-[10px] text-gray-500 font-mono">zsh</span>
+                      <div className={`w-2 h-2 rounded-full ${terminalPane === "debug" ? "bg-blue-400" : "bg-green-500"}`}></div>
+                      <span className="text-[10px] text-gray-500 font-mono">{terminalPane === "terminal" ? "zsh" : terminalPane === "output" ? "output" : "debug"}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-1 scrollbar-thin scrollbar-thumb-[#30363d] bg-[#0d1117]">
-                  {logs.length === 0 ? (
-                    <div className="text-gray-600 italic flex items-center gap-2">
-                      <ChevronRight className="w-3 h-3" />
-                      Awaiting analysis initialization...
-                    </div>
-                  ) : (
-                    logs.map((log, i) => (
-                      <div key={i} className="flex gap-3 group">
-                        <span className="text-gray-600 select-none group-hover:text-gray-400">›</span>
-                        <span className={`
-                          ${log.type === 'error' ? 'text-red-400' : ''}
-                          ${log.type === 'warn' ? 'text-yellow-400' : ''}
-                          ${log.type === 'success' ? 'text-green-400' : ''}
-                          ${log.type === 'info' ? 'text-blue-300' : ''}
-                        `}>
-                          {log.msg}
-                        </span>
-                      </div>
-                    ))
+                  {/* Terminal View */}
+                  {terminalPane === "terminal" && (
+                    <>
+                      {logs.length === 0 ? (
+                        <div className="text-gray-600 italic flex items-center gap-2">
+                          <ChevronRight className="w-3 h-3" />
+                          Awaiting analysis initialization...
+                        </div>
+                      ) : (
+                        logs.map((log, i) => (
+                          <div key={i} className="flex gap-3 group">
+                            <span className="text-gray-600 select-none group-hover:text-gray-400">›</span>
+                            <span className={`
+                              ${log.type === 'error' ? 'text-red-400' : ''}
+                              ${log.type === 'warn' ? 'text-yellow-400' : ''}
+                              ${log.type === 'success' ? 'text-green-400' : ''}
+                              ${log.type === 'info' ? 'text-blue-300' : ''}
+                            `}>
+                              {log.msg}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                      {(step as string) === "scanning" && (
+                        <div className="flex gap-3 animate-pulse">
+                          <span className="text-gray-600">›</span>
+                          <span className="text-[#FF9900]">Analyzing infrastructure...</span>
+                        </div>
+                      )}
+                    </>
                   )}
-                  {(step as string) === "scanning" && (
-                    <div className="flex gap-3 animate-pulse">
-                      <span className="text-gray-600">›</span>
-                      <span className="text-[#FF9900]">Analyzing infrastructure...</span>
-                    </div>
+                  {/* Output View */}
+                  {terminalPane === "output" && (
+                    <>
+                      {outputLogs.length === 0 ? (
+                        <div className="text-gray-600 italic space-y-2">
+                          <div className="flex items-center gap-2"><ChevronRight className="w-3 h-3" /> No scan output yet.</div>
+                          <div className="text-gray-700 text-[10px]">Run an infrastructure analysis to see structured results here. Output includes findings by severity, estimated costs, and optimization suggestions.</div>
+                        </div>
+                      ) : (
+                        outputLogs.map((log, i) => (
+                          <div key={i} className="flex gap-3 group">
+                            <span className={`
+                              ${log.type === 'error' ? 'text-red-400' : ''}
+                              ${log.type === 'warn' ? 'text-yellow-400' : ''}
+                              ${log.type === 'success' ? 'text-green-400' : ''}
+                              ${log.type === 'info' ? 'text-gray-300' : ''}
+                            `} style={{ whiteSpace: 'pre' }}>
+                              {log.msg}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </>
+                  )}
+                  {/* Debug View */}
+                  {terminalPane === "debug" && (
+                    <>
+                      {debugLogs.length === 0 ? (
+                        <div className="text-gray-600 italic space-y-2">
+                          <div className="flex items-center gap-2"><ChevronRight className="w-3 h-3" /> Debug console ready.</div>
+                          <div className="text-gray-700 text-[10px]">API calls, request/response details, timing, and error traces will appear here during scan and chat operations.</div>
+                        </div>
+                      ) : (
+                        debugLogs.map((log, i) => (
+                          <div key={i} className="flex gap-3 group">
+                            <span className={`
+                              ${log.type === 'error' ? 'text-red-400' : ''}
+                              ${log.type === 'warn' ? 'text-yellow-400' : ''}
+                              ${log.type === 'success' ? 'text-green-400' : ''}
+                              ${log.type === 'info' ? 'text-purple-300' : ''}
+                            `} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                              {log.msg}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </>
                   )}
                 </div>
               </div>

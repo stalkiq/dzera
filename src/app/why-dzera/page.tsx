@@ -665,6 +665,355 @@ export default function WhyDzeraPage() {
     </div>
   );
 
+  const renderAmazonNova = () => (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="border-b border-gray-200 pb-4">
+        <div className="flex items-center gap-3 mb-2">
+          <DLogo size="lg" variant="orange" />
+          <div>
+            <h1 className="text-3xl font-serif text-black">Amazon Nova in AWS Dzera</h1>
+            <p className="text-gray-700 italic">AI-powered intelligence throughout the platform</p>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500">How Amazon Nova enhances cost optimization</p>
+      </div>
+
+      {/* What is Amazon Nova */}
+      <section>
+        <h2 className="text-2xl font-serif text-black mb-4 border-b border-gray-300 pb-1 flex items-center gap-2">
+          <DLogo size="sm" variant="dark" />
+          What is Amazon Nova?
+        </h2>
+        <p className="text-gray-800 leading-relaxed mb-4">
+          <strong>Amazon Nova</strong> is a family of foundation models developed by Amazon and available through AWS. Nova models are designed for speed, cost-efficiency, and deep understanding of AWS services and cloud infrastructure. AWS Dzera integrates <strong>Nova 2 Lite</strong> — a lightweight, low-latency model optimized for conversational interactions and domain-specific knowledge tasks.
+        </p>
+        <div className="bg-[#232f3e] text-white rounded-lg p-6 mb-4">
+          <div className="flex items-center gap-3 mb-4">
+            <DLogo size="lg" variant="orange" />
+            <div>
+              <h3 className="text-xl font-bold">Why Nova?</h3>
+              <p className="text-gray-300 text-sm">Built by Amazon, for Amazon&apos;s cloud</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-white/5 rounded p-3">
+              <p className="text-[#FF9900] font-semibold mb-1">Native AWS Knowledge</p>
+              <p className="text-gray-300 text-xs">Deep understanding of AWS services, pricing models, and best practices — trained on AWS documentation.</p>
+            </div>
+            <div className="bg-white/5 rounded p-3">
+              <p className="text-[#FF9900] font-semibold mb-1">Low Latency</p>
+              <p className="text-gray-300 text-xs">Nova 2 Lite delivers sub-second responses, keeping the conversational experience fast and natural.</p>
+            </div>
+            <div className="bg-white/5 rounded p-3">
+              <p className="text-[#FF9900] font-semibold mb-1">Cost Effective</p>
+              <p className="text-gray-300 text-xs">Lightweight model means low inference costs, aligning with Dzera&apos;s mission to reduce — not add — cloud spend.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How Nova is Integrated */}
+      <section>
+        <h2 className="text-2xl font-serif text-black mb-4 border-b border-gray-300 pb-1 flex items-center gap-2">
+          <DLogo size="sm" variant="dark" />
+          How Nova is Integrated
+        </h2>
+        <p className="text-gray-800 leading-relaxed mb-4">
+          Nova is not confined to a single chatbox — it&apos;s woven throughout the Dzera experience as an intelligence layer that assists users at every stage of the cost optimization workflow.
+        </p>
+
+        <div className="space-y-4">
+          {/* Integration 1: Smart Onboarding */}
+          <div className="bg-gray-50 border border-gray-300 p-5 rounded">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#FF9900] rounded-full flex items-center justify-center text-black font-bold text-lg">1</div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Smart Onboarding Assistant</h3>
+                <p className="text-xs text-gray-500">Pre-scan experience</p>
+              </div>
+            </div>
+            <p className="text-gray-700 text-sm mb-3">
+              When a user first visits Dzera, Nova greets them with a conversational onboarding flow instead of a static form. The assistant adapts its guidance based on the user&apos;s self-reported AWS experience level:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+              <div className="bg-white border border-gray-200 rounded p-3">
+                <p className="font-semibold text-sm text-gray-900 mb-1">&ldquo;I&apos;m new to AWS&rdquo;</p>
+                <p className="text-xs text-gray-600">Full step-by-step IAM walkthrough with links to the AWS Console, explaining what access keys are and how to create them safely.</p>
+              </div>
+              <div className="bg-white border border-gray-200 rounded p-3">
+                <p className="font-semibold text-sm text-gray-900 mb-1">&ldquo;I know the basics&rdquo;</p>
+                <p className="text-xs text-gray-600">Quick reminder about IAM best practices and ReadOnlyAccess policy, with direct links to create credentials.</p>
+              </div>
+              <div className="bg-white border border-gray-200 rounded p-3">
+                <p className="font-semibold text-sm text-gray-900 mb-1">&ldquo;I&apos;m an AWS expert&rdquo;</p>
+                <p className="text-xs text-gray-600">Minimal guidance — confirms read-only API usage and immediately presents credential fields.</p>
+              </div>
+            </div>
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-3">
+              <p className="text-blue-800 text-xs">
+                <strong>Key Feature:</strong> Nova validates credential format in real-time, catching common mistakes like temporary session tokens (ASIA vs AKIA) or truncated secret keys before the scan even begins.
+              </p>
+            </div>
+          </div>
+
+          {/* Integration 2: Chatbot */}
+          <div className="bg-gray-50 border border-gray-300 p-5 rounded">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#FF9900] rounded-full flex items-center justify-center text-black font-bold text-lg">2</div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">AWS Cost Optimization Chatbot</h3>
+                <p className="text-xs text-gray-500">Always-available assistant</p>
+              </div>
+            </div>
+            <p className="text-gray-700 text-sm mb-3">
+              The right sidebar features a persistent Nova-powered chatbot specialized in AWS cost optimization. Users can ask questions at any point — before, during, or after a scan:
+            </p>
+            <div className="bg-gray-900 rounded p-4 mb-3">
+              <div className="space-y-3 text-sm">
+                <div className="flex gap-2">
+                  <span className="text-[#FF9900] font-bold flex-shrink-0">User:</span>
+                  <span className="text-gray-300">&ldquo;Why is my NAT Gateway so expensive?&rdquo;</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-green-400 font-bold flex-shrink-0">Nova:</span>
+                  <span className="text-gray-300">&ldquo;NAT Gateways charge $0.045/hour (~$32.40/month) just to exist, plus $0.045 per GB of data processed. If your private subnets route internet traffic through it, the data processing charges can exceed the hourly rate. Consider: 1) VPC endpoints for S3/DynamoDB ($0 data charge), 2) Moving workloads to public subnets if they don&apos;t need private networking, 3) Scheduling NAT Gateways off during non-business hours.&rdquo;</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+              <p className="text-yellow-800 text-xs">
+                <strong>System Prompt:</strong> Nova is pre-configured with a system prompt that focuses its responses specifically on AWS cost optimization, FinOps best practices, and infrastructure efficiency. It understands Dzera&apos;s capabilities and can guide users to specific features.
+              </p>
+            </div>
+          </div>
+
+          {/* Integration 3: In-Context Help */}
+          <div className="bg-gray-50 border border-gray-300 p-5 rounded">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#FF9900] rounded-full flex items-center justify-center text-black font-bold text-lg">3</div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">In-Context Help During Onboarding</h3>
+                <p className="text-xs text-gray-500">Ask questions while setting up</p>
+              </div>
+            </div>
+            <p className="text-gray-700 text-sm mb-3">
+              While entering credentials in the onboarding flow, users can type free-form questions directly to Nova without leaving the setup screen. This means users don&apos;t need to switch to a separate help page or documentation — they get answers inline:
+            </p>
+            <ul className="list-disc ml-6 space-y-1 text-gray-700 text-sm">
+              <li>&ldquo;What&apos;s the difference between AKIA and ASIA keys?&rdquo;</li>
+              <li>&ldquo;Is it safe to use my root account credentials?&rdquo;</li>
+              <li>&ldquo;How do I create a read-only IAM user?&rdquo;</li>
+              <li>&ldquo;Can Dzera delete any of my resources?&rdquo;</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Technical Architecture */}
+      <section>
+        <h2 className="text-2xl font-serif text-black mb-4 border-b border-gray-300 pb-1 flex items-center gap-2">
+          <DLogo size="sm" variant="dark" />
+          Technical Architecture
+        </h2>
+        <p className="text-gray-800 leading-relaxed mb-4">
+          Nova is integrated through a serverless backend architecture that keeps costs low and latency minimal:
+        </p>
+        <div className="bg-gray-900 rounded p-4 mb-4">
+          <code className="text-green-400 text-sm block leading-relaxed">
+            User Message → API Gateway → Lambda Function → Nova API<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nova 2 Lite (model: nova-2-lite-v1)<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br/>
+            AI Response → Lambda → API Gateway → User Interface
+          </code>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-400 text-sm">
+            <thead>
+              <tr className="bg-gray-800 text-white">
+                <th className="border border-gray-600 px-3 py-2 text-left font-bold">Component</th>
+                <th className="border border-gray-600 px-3 py-2 text-left font-bold">Technology</th>
+                <th className="border border-gray-600 px-3 py-2 text-left font-bold">Purpose</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-900">
+              <tr className="bg-white">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">Model</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Nova 2 Lite (nova-2-lite-v1)</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Generate conversational AI responses</td>
+              </tr>
+              <tr className="bg-gray-100">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">API</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">OpenAI-compatible endpoint</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Standard chat completions interface</td>
+              </tr>
+              <tr className="bg-white">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">Backend</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">AWS Lambda (Node.js 20.x)</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Serverless request handling</td>
+              </tr>
+              <tr className="bg-gray-100">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">Gateway</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">AWS API Gateway (REST)</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">HTTPS endpoint with CORS</td>
+              </tr>
+              <tr className="bg-white">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">Frontend</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Next.js (React)</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Chat UI with message history</td>
+              </tr>
+              <tr className="bg-gray-100">
+                <td className="border border-gray-300 px-3 py-2 font-semibold text-black">Infrastructure</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">AWS CDK (TypeScript)</td>
+                <td className="border border-gray-300 px-3 py-2 text-gray-800">Infrastructure as Code deployment</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Conversation Design */}
+      <section>
+        <h2 className="text-2xl font-serif text-black mb-4 border-b border-gray-300 pb-1 flex items-center gap-2">
+          <DLogo size="sm" variant="dark" />
+          Conversation Design
+        </h2>
+        <p className="text-gray-800 leading-relaxed mb-4">
+          Nova maintains full conversation history within each session, enabling multi-turn dialogues where follow-up questions retain context:
+        </p>
+        <div className="bg-gray-900 rounded p-4 mb-4 space-y-2">
+          <div className="flex gap-2 text-sm">
+            <span className="text-[#FF9900] font-bold flex-shrink-0">User:</span>
+            <span className="text-gray-300">&ldquo;What services does Dzera scan?&rdquo;</span>
+          </div>
+          <div className="flex gap-2 text-sm">
+            <span className="text-green-400 font-bold flex-shrink-0">Nova:</span>
+            <span className="text-gray-300">&ldquo;Dzera scans EC2, RDS, S3, DynamoDB, CloudFront, NAT Gateways, Elastic IPs, and EBS volumes...&rdquo;</span>
+          </div>
+          <div className="flex gap-2 text-sm">
+            <span className="text-[#FF9900] font-bold flex-shrink-0">User:</span>
+            <span className="text-gray-300">&ldquo;Which of those is usually the most expensive?&rdquo;</span>
+          </div>
+          <div className="flex gap-2 text-sm">
+            <span className="text-green-400 font-bold flex-shrink-0">Nova:</span>
+            <span className="text-gray-300">&ldquo;EC2 and RDS are typically the largest cost drivers, often accounting for 50-70% of total spend...&rdquo;</span>
+          </div>
+        </div>
+
+        <div className="bg-gray-50 border border-gray-300 rounded p-4">
+          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <DLogo size="xs" variant="dark" />
+            System Prompt Configuration
+          </h4>
+          <p className="text-gray-700 text-sm mb-2">
+            Nova&apos;s system prompt constrains responses to AWS cost optimization topics:
+          </p>
+          <ul className="list-disc ml-6 space-y-1 text-gray-700 text-sm">
+            <li>Focused on AWS services, pricing, and architecture</li>
+            <li>Provides actionable cost-saving recommendations</li>
+            <li>References specific AWS pricing data where possible</li>
+            <li>Understands Dzera&apos;s capabilities and guides users to features</li>
+            <li>Responds concisely — optimized for chat, not essays</li>
+          </ul>
+        </div>
+      </section>
+
+      {/* Security & Privacy */}
+      <section>
+        <h2 className="text-2xl font-serif text-black mb-4 border-b border-gray-300 pb-1 flex items-center gap-2">
+          <DLogo size="sm" variant="dark" />
+          Security &amp; Privacy
+        </h2>
+        <div className="bg-green-50 border border-green-200 rounded p-4 mb-4">
+          <ul className="space-y-2 text-green-800 text-sm">
+            <li className="flex items-start gap-2">
+              <DLogo size="xs" variant="dark" />
+              <span><strong>No credentials sent to Nova:</strong> AWS access keys are only used for the scan Lambda — they are never included in chat messages or Nova API calls.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <DLogo size="xs" variant="dark" />
+              <span><strong>No data persistence:</strong> Chat history exists only in the browser session. Closing the tab clears all conversation data.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <DLogo size="xs" variant="dark" />
+              <span><strong>Serverless processing:</strong> Lambda functions are ephemeral — no standing servers store or cache conversation data.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <DLogo size="xs" variant="dark" />
+              <span><strong>API key isolation:</strong> The Nova API key is stored as a Lambda environment variable and is never exposed to the frontend.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      {/* Future Roadmap */}
+      <section>
+        <h2 className="text-2xl font-serif text-black mb-4 border-b border-gray-300 pb-1 flex items-center gap-2">
+          <DLogo size="sm" variant="dark" />
+          Future Nova Integrations
+        </h2>
+        <p className="text-gray-800 leading-relaxed mb-4">
+          Planned enhancements that will deepen Nova&apos;s role in the Dzera platform:
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-gray-50 border-l-4 border-[#FF9900] p-4 rounded-r">
+            <div className="flex items-center gap-2 mb-2">
+              <DLogo size="sm" variant="orange" />
+              <h4 className="font-semibold text-gray-900">Scan Results Analysis</h4>
+            </div>
+            <p className="text-gray-700 text-sm">
+              After a scan completes, Nova will automatically summarize findings, highlight the biggest savings opportunities, and generate a prioritized action plan.
+            </p>
+          </div>
+          <div className="bg-gray-50 border-l-4 border-[#FF9900] p-4 rounded-r">
+            <div className="flex items-center gap-2 mb-2">
+              <DLogo size="sm" variant="orange" />
+              <h4 className="font-semibold text-gray-900">Natural Language Search</h4>
+            </div>
+            <p className="text-gray-700 text-sm">
+              Instead of filtering by service name, users will be able to search using plain English: &ldquo;services that cost money when idle&rdquo; or &ldquo;cheapest way to store files.&rdquo;
+            </p>
+          </div>
+          <div className="bg-gray-50 border-l-4 border-[#FF9900] p-4 rounded-r">
+            <div className="flex items-center gap-2 mb-2">
+              <DLogo size="sm" variant="orange" />
+              <h4 className="font-semibold text-gray-900">Proactive Recommendations</h4>
+            </div>
+            <p className="text-gray-700 text-sm">
+              Nova will surface contextual tips based on what the user is viewing — browsing EC2? Nova suggests Reserved Instances. Looking at S3? Nova recommends lifecycle policies.
+            </p>
+          </div>
+          <div className="bg-gray-50 border-l-4 border-[#FF9900] p-4 rounded-r">
+            <div className="flex items-center gap-2 mb-2">
+              <DLogo size="sm" variant="orange" />
+              <h4 className="font-semibold text-gray-900">Error Explanation</h4>
+            </div>
+            <p className="text-gray-700 text-sm">
+              When scan errors occur, Nova will automatically explain the error in plain language and suggest resolution steps — no more cryptic error messages.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <div className="bg-gradient-to-r from-[#232f3e] to-[#131A22] rounded-lg p-6 text-center">
+        <DLogo size="xl" variant="orange" />
+        <h3 className="text-xl font-bold text-white mt-4 mb-2">Try Nova in Dzera</h3>
+        <p className="text-gray-300 text-sm mb-4">
+          Open the analyzer and start chatting with Nova about your AWS costs.
+        </p>
+        <a
+          href="/"
+          className="inline-block bg-[#FF9900] hover:bg-[#e68a00] text-black font-bold py-2 px-6 rounded transition-colors"
+        >
+          Launch Analyzer
+        </a>
+      </div>
+    </div>
+  );
+
   const renderCLIScript = () => (
     <div className="space-y-8">
       <div className="border-b border-gray-200 pb-4">
@@ -841,6 +1190,17 @@ export default function WhyDzeraPage() {
               <DLogo size="xs" variant={activeSection === "cli-script" ? "dark" : "dark"} />
               CLI Script
             </button>
+            <button
+              onClick={() => setActiveSection("amazon-nova")}
+              className={`px-3 py-2 text-sm rounded transition-colors flex items-center gap-2 ${
+                activeSection === "amazon-nova"
+                  ? "bg-[#FF9900] text-black font-medium"
+                  : "bg-white text-gray-700 border border-gray-300"
+              }`}
+            >
+              <DLogo size="xs" variant={activeSection === "amazon-nova" ? "dark" : "dark"} />
+              Amazon Nova
+            </button>
           </div>
           <div className="mt-4">
             <a
@@ -904,6 +1264,17 @@ export default function WhyDzeraPage() {
               >
                 <DLogo size="xs" variant={activeSection === "cli-script" ? "dark" : "dark"} />
                 CLI Script
+              </button>
+              <button
+                onClick={() => setActiveSection("amazon-nova")}
+                className={`w-full text-left px-3 py-2 text-sm rounded transition-colors flex items-center gap-2 ${
+                  activeSection === "amazon-nova"
+                    ? "bg-[#FF9900] text-black font-medium"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <DLogo size="xs" variant={activeSection === "amazon-nova" ? "dark" : "dark"} />
+                Amazon Nova
               </button>
             </nav>
           </div>
@@ -973,6 +1344,7 @@ export default function WhyDzeraPage() {
           {activeSection === "whitepaper" && renderWhitepaper()}
           {activeSection === "what-is-dzera" && renderWhatIsDzera()}
           {activeSection === "faq" && renderFAQ()}
+          {activeSection === "amazon-nova" && renderAmazonNova()}
           {activeSection === "cli-script" && renderCLIScript()}
         </div>
       </div>
