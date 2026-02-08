@@ -1478,7 +1478,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex-1 min-h-0">
-                  <ChatInterface className="h-full border-l-0" />
+                  <ChatInterface className="h-full border-l-0" scanResults={result} />
                 </div>
               </div>
             )}
@@ -2560,7 +2560,7 @@ export default function Home() {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Assistant</span>
               </div>
               <div className="flex-1 min-h-0">
-                <ChatInterface className="h-full border-l-0" />
+                <ChatInterface className="h-full border-l-0" scanResults={result} />
               </div>
             </div>
             </div>
@@ -3033,7 +3033,7 @@ export default function Home() {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Assistant</span>
               </div>
               <div className="flex-1 min-h-0">
-                <ChatInterface className="h-full border-l-0" />
+                <ChatInterface className="h-full border-l-0" scanResults={result} />
               </div>
             </div>
           </div>

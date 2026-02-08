@@ -27,7 +27,7 @@ Be concise, helpful, and focus on actionable advice. When users ask about specif
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
+    const { messages, scanContext } = await req.json();
 
     const novaClient = getNovaClient();
     if (!novaClient) {
@@ -37,9 +37,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Build system prompt — if scan results are available, inject them as context
+    let systemPrompt = SYSTEM_PROMPT;
+    if (scanContext) {
+      systemPrompt += `\n\n--- USER'S SCAN RESULTS ---\nThe user has run an infrastructure scan. Here are their actual results. Use this data to answer their questions with specific resource IDs, costs, and recommendations:\n\n${scanContext}`;
+    }
+
     // Convert messages to Nova format, adding system prompt
     const novaMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: systemPrompt },
       ...messages.map((msg: { role: string; content: string }) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,

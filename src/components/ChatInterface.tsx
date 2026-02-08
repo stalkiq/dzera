@@ -1,8 +1,30 @@
 // src/components/ChatInterface.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Send, Bot, User } from "lucide-react";
+
+type CostFinding = {
+  service: string;
+  resourceId: string;
+  resourceName?: string;
+  region: string;
+  severity: "critical" | "warning" | "info";
+  title: string;
+  description: string;
+  estimatedMonthlyCost: number;
+  estimatedHourlyCost: number;
+  suggestion: string;
+  actionUrl?: string;
+};
+
+type ScanResult = {
+  findings: CostFinding[];
+  totalEstimatedMonthlyCost: number;
+  totalEstimatedHourlyCost: number;
+  startedAt: string;
+  finishedAt: string;
+};
 
 type ChatMessage = {
   id: string;
@@ -13,11 +35,70 @@ type ChatMessage = {
 
 interface ChatInterfaceProps {
   className?: string;
+  scanResults?: ScanResult | null;
 }
 
-export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
+/** Build a structured text summary of scan results for the AI context */
+function buildScanContext(results: ScanResult): string {
+  const critical = results.findings.filter(f => f.severity === "critical");
+  const warnings = results.findings.filter(f => f.severity === "warning");
+  const infos = results.findings.filter(f => f.severity === "info");
+
+  let ctx = `=== AWS INFRASTRUCTURE SCAN RESULTS ===\n`;
+  ctx += `Total estimated monthly cost: $${results.totalEstimatedMonthlyCost?.toFixed(2)}\n`;
+  ctx += `Total findings: ${results.findings.length} (${critical.length} critical, ${warnings.length} warnings, ${infos.length} informational)\n`;
+  ctx += `Scan period: ${results.startedAt} → ${results.finishedAt}\n\n`;
+
+  results.findings.forEach((f, i) => {
+    ctx += `[${i + 1}] ${f.severity.toUpperCase()} — ${f.title}\n`;
+    ctx += `    Service: ${f.service} | Resource: ${f.resourceId}${f.resourceName ? ` (${f.resourceName})` : ""} | Region: ${f.region}\n`;
+    ctx += `    Cost: ~$${f.estimatedMonthlyCost?.toFixed(2)}/mo ($${f.estimatedHourlyCost?.toFixed(4)}/hr)\n`;
+    ctx += `    Description: ${f.description}\n`;
+    ctx += `    Suggestion: ${f.suggestion}\n\n`;
+  });
+
+  return ctx;
+}
+
+/** Build a human-friendly summary message for the chat */
+function buildSummaryMessage(results: ScanResult): string {
+  const critical = results.findings.filter(f => f.severity === "critical");
+  const warnings = results.findings.filter(f => f.severity === "warning");
+
+  let msg = `I've analyzed your AWS infrastructure scan results. Here's what I found:\n\n`;
+  msg += `**Total estimated cost: $${results.totalEstimatedMonthlyCost?.toFixed(2)}/month**\n`;
+  msg += `**${results.findings.length} findings** — ${critical.length} critical, ${warnings.length} warnings\n\n`;
+
+  if (critical.length > 0) {
+    msg += `🔴 **Top issues to address:**\n`;
+    critical.slice(0, 3).forEach(f => {
+      msg += `• **${f.title}** — ${f.service} in ${f.region} (~$${f.estimatedMonthlyCost?.toFixed(2)}/mo)\n`;
+    });
+    msg += `\n`;
+  }
+
+  if (warnings.length > 0) {
+    msg += `🟡 **Optimization opportunities:**\n`;
+    warnings.slice(0, 3).forEach(f => {
+      msg += `• **${f.title}** — ${f.service} in ${f.region} (~$${f.estimatedMonthlyCost?.toFixed(2)}/mo)\n`;
+    });
+    msg += `\n`;
+  }
+
+  msg += `You can ask me anything about these results — for example:\n`;
+  msg += `• "What's my biggest cost driver?"\n`;
+  msg += `• "How do I fix the critical issues?"\n`;
+  msg += `• "Prioritize my cleanup tasks"\n`;
+  msg += `• "How much could I save?"`;
+
+  return msg;
+}
+
+export default function ChatInterface({ className = "", scanResults = null }: ChatInterfaceProps) {
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const hasSentSummaryRef = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Demo chat messages
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -53,6 +134,32 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
     }
   ]);
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, isTyping]);
+
+  // When scan results arrive, auto-post a summary message
+  useEffect(() => {
+    if (scanResults && scanResults.findings.length > 0 && !hasSentSummaryRef.current) {
+      hasSentSummaryRef.current = true;
+      const summary = buildSummaryMessage(scanResults);
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: `scan-summary-${Date.now()}`,
+          type: "assistant",
+          content: summary,
+          timestamp: new Date(),
+        },
+      ]);
+    }
+    // Reset if results are cleared (new scan)
+    if (!scanResults) {
+      hasSentSummaryRef.current = false;
+    }
+  }, [scanResults]);
+
   const handleSendMessage = async () => {
     if (!chatInput.trim() || isTyping) return;
 
@@ -75,6 +182,11 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
         content: msg.content,
       }));
 
+      // Build scan context if results are available
+      const scanContext = scanResults && scanResults.findings.length > 0
+        ? buildScanContext(scanResults)
+        : undefined;
+
       // Use API Gateway endpoint directly in production, local API route in development
       const isProduction = typeof window !== 'undefined' && 
         !window.location.hostname.includes('localhost');
@@ -87,7 +199,7 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ messages: apiMessages }),
+        body: JSON.stringify({ messages: apiMessages, scanContext }),
       });
 
       if (!response.ok) {
@@ -179,6 +291,7 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
             </div>
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Chat Input */}
@@ -196,6 +309,11 @@ export default function ChatInterface({ className = "" }: ChatInterfaceProps) {
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
               <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase font-bold tracking-wider">Nova 2 Lite</span>
+              {scanResults && scanResults.findings.length > 0 && (
+                <span className="text-[8px] sm:text-[9px] bg-[#FF9900]/15 text-[#FF9900] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                  {scanResults.findings.length} findings loaded
+                </span>
+              )}
             </div>
             <button
               onClick={handleSendMessage}

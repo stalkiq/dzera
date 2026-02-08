@@ -38,7 +38,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { messages } = JSON.parse(event.body || '{}');
+    const { messages, scanContext } = JSON.parse(event.body || '{}');
 
     if (!messages || !Array.isArray(messages)) {
       return {
@@ -59,6 +59,12 @@ exports.handler = async (event) => {
       };
     }
 
+    // Build system prompt — inject scan results as context if available
+    let systemPrompt = SYSTEM_PROMPT;
+    if (scanContext) {
+      systemPrompt += `\n\n--- USER'S SCAN RESULTS ---\nThe user has run an infrastructure scan. Here are their actual results. Use this data to answer their questions with specific resource IDs, costs, and recommendations:\n\n${scanContext}`;
+    }
+
     // Filter messages: Nova API requires first non-system message to be from 'user'
     // Remove any leading assistant messages (like the initial greeting)
     const cleanedMessages = messages
@@ -76,7 +82,7 @@ exports.handler = async (event) => {
       });
 
     const novaMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: systemPrompt },
       ...cleanedMessages,
     ];
 
