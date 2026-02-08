@@ -100,37 +100,13 @@ export default function ChatInterface({ className = "", scanResults = null }: Ch
   const hasSentSummaryRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Demo chat messages
+  // Chat messages — start with a single greeting
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: "1",
       type: "assistant",
-      content: "Hi! I'm Dzera, your AWS cost optimization assistant. I can help you understand your AWS bill, identify cost-saving opportunities, and provide recommendations. What would you like to know?",
-      timestamp: new Date(Date.now() - 300000)
-    },
-    {
-      id: "2",
-      type: "user",
-      content: "My AWS bill went from $50 to $200 this month. Can you help me figure out why?",
-      timestamp: new Date(Date.now() - 240000)
-    },
-    {
-      id: "3",
-      type: "assistant",
-      content: "I'd be happy to help you investigate that cost increase! A 4x jump in your AWS bill suggests something significant changed. Here are the most common causes:\n\n**1. New EC2 Instances** - Did you launch any new servers or increase instance sizes?\n**2. Data Transfer** - Large file uploads/downloads or increased traffic\n**3. Storage Growth** - S3, EBS, or database storage expansion\n**4. Forgotten Resources** - NAT Gateways, Elastic IPs, or idle instances\n\nTo get specific answers, I recommend running a scan with your AWS credentials. Would you like me to guide you through that process?",
-      timestamp: new Date(Date.now() - 180000)
-    },
-    {
-      id: "4",
-      type: "user",
-      content: "Yes, please guide me through the scanning process",
-      timestamp: new Date(Date.now() - 120000)
-    },
-    {
-      id: "5",
-      type: "assistant",
-      content: "Perfect! Here's how to scan your AWS account safely:\n\n**Step 1: Create Read-Only Credentials**\n• Go to AWS IAM Console\n• Create a new user with 'ReadOnlyAccess' policy\n• Generate access keys\n\n**Step 2: Run the Scan**\n• Enter your credentials in the editor on the left\n• Click 'SCAN AWS ENVIRONMENT'\n• Wait 30-60 seconds for results\n\n**What the scan finds:**\n• Running EC2 instances and their costs\n• Unattached EBS volumes\n• Unused Elastic IPs\n• NAT Gateway charges\n• CloudFront distributions\n• DynamoDB replication costs\n\nThe scan is completely safe - it only reads your resources, never modifies anything. Ready to try it?",
-      timestamp: new Date(Date.now() - 60000)
+      content: "Hi! I'm Dzera, your AWS cost optimization assistant powered by Nova AI. Ask me anything about your AWS costs, or run a scan to get personalized recommendations.",
+      timestamp: new Date()
     }
   ]);
 
